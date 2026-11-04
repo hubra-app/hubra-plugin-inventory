@@ -1,4 +1,4 @@
-import { registerPlugin } from '@hubra/plugin-sdk'
+import { categoryColors, colorText, registerPlugin } from '@hubra/plugin-sdk'
 import { IconPackage } from '@tabler/icons-react'
 import { listInventory } from './api'
 import { InventoryScreen } from './Inventory'
@@ -27,7 +27,10 @@ registerPlugin({
       module: 'inventory',
       perm: 'inventory.items.read',
       label: 'shell.searchKind.inventory',
-      color: { bg: '#eef2ff', color: '#4338ca' },
+      color: {
+        bg: `color-mix(in srgb, ${categoryColors.purple} 12%, var(--hb-surface))`,
+        color: colorText(categoryColors.purple),
+      },
       load: async () =>
         (await listInventory()).map((item) => ({
           id: item.id,
