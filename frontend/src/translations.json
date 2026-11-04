@@ -9,6 +9,7 @@
       "allStatuses": "All statuses",
       "archived": "Archived",
       "available": "Available",
+      "backToInventory": "Back to inventory",
       "broken": "Broken",
       "byResponsible": "By responsible person",
       "category": "Category",
@@ -92,7 +93,10 @@
       "status_pending": "Pending",
       "status_lost": "Lost",
       "status_retired": "Retired",
-      "instructed": "Instructed"
+      "instructed": "Instructed",
+      "itemNotFound": "This item does not exist (any more).",
+      "statusLabel": "Status",
+      "location": "Location"
     },
     "shell": {
       "nav": {
@@ -113,6 +117,7 @@
       "allStatuses": "Alle Status",
       "archived": "Archiviert",
       "available": "Verfügbar",
+      "backToInventory": "Zurück zum Inventar",
       "broken": "Defekt",
       "byResponsible": "Nach verantwortlicher Person",
       "category": "Kategorie",
@@ -196,7 +201,10 @@
       "status_pending": "Ausstehend",
       "status_lost": "Verloren",
       "status_retired": "Ausgemustert",
-      "instructed": "Eingewiesen"
+      "instructed": "Eingewiesen",
+      "itemNotFound": "Diesen Gegenstand gibt es nicht (mehr).",
+      "statusLabel": "Status",
+      "location": "Standort"
     },
     "shell": {
       "nav": {

@@ -1,11 +1,10 @@
 import { colorText } from '@hubra/plugin-sdk'
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
 import { Button, TextInput, Select, Badge, Paper, Text } from '@mantine/core'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@hubra/plugin-sdk'
 import { IconPlus, IconSearch } from '@tabler/icons-react'
-import { useToast, useAuth } from '@hubra/plugin-sdk'
+import { useToast, useAuth, useNav } from '@hubra/plugin-sdk'
 import {
   PageHead,
   usePagination,
@@ -36,7 +35,6 @@ import {
   STATUSES,
   STATUS_CONFIG,
 } from './constants'
-import { ItemDetailPanel } from './ItemDetailPanel'
 import { ItemFormModal } from './ItemFormModal'
 import { useItemAccess } from './access'
 
@@ -66,30 +64,8 @@ export function InventoryScreen() {
   const [view, setView] = useState<'table' | 'cards'>('cards')
 
   const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null)
-  const [detailItem, setDetailItem] = useState<InventoryItem | null>(null)
-  // The open item is in the URL (/app/inventory/<id>), so search hits,
-  // notifications and the guide's back link open it again.
-  const { id: openId } = useParams()
-  const navigate = useNavigate()
-  const openItem = (item: InventoryItem) => {
-    setDetailItem(item)
-    navigate(`/app/inventory/${item.id}`)
-  }
-  const closeItem = () => {
-    setDetailItem(null)
-    if (openId) navigate('/app/inventory')
-  }
-  useEffect(() => {
-    if (!openId) {
-      setDetailItem(null)
-      return
-    }
-    if (loading) return
-    if (detailItem && String(detailItem.id) === openId) return
-    const found = items.find((item) => String(item.id) === openId)
-    if (found) setDetailItem(found)
-    else navigate('/app/inventory', { replace: true })
-  }, [openId, items, loading, detailItem, navigate])
+  const { go } = useNav()
+  const openItem = (item: InventoryItem) => go(`/app/inventory/${item.id}`)
 
   // Form state
   // 'new' opens the form for a new item, an item opens it for that item.
@@ -108,8 +84,7 @@ export function InventoryScreen() {
   const saveItem = async (target: InventoryItem | null, input: InventoryItemCreate) => {
     try {
       if (target) {
-        const item = await updateInventoryItem(target.id, input)
-        if (detailItem?.id === item.id) setDetailItem(item)
+        await updateInventoryItem(target.id, input)
       } else {
         await createInventoryItem(input)
       }
@@ -136,7 +111,6 @@ export function InventoryScreen() {
     try {
       await deleteInventoryItem(deleteTarget.id)
       queryClient.invalidateQueries({ queryKey: QK })
-      if (detailItem?.id === deleteTarget.id) closeItem()
       notify(
         'info',
         t('inventory.item.removed', 'Gegenstand gelöscht'),
@@ -157,13 +131,7 @@ export function InventoryScreen() {
     }
   }
 
-  const handleInstructionChange = (updated: InventoryItem) => {
-    queryClient.invalidateQueries({ queryKey: QK })
-    setDetailItem(updated)
-  }
-
   const currentUserId = currentUser ? Number(currentUser.id) : null
-  const currentUserName = currentUser?.name ?? ''
 
   return (
     <div>
@@ -548,21 +516,6 @@ export function InventoryScreen() {
             </>
           )}
         </Paper>
-      )}
-
-      {detailItem && (
-        <ItemDetailPanel
-          item={detailItem}
-          onClose={closeItem}
-          access={accessTo(detailItem)}
-          onEdit={() => {
-            setFormTarget(detailItem)
-            closeItem()
-          }}
-          currentUserId={currentUserId}
-          currentUserName={currentUserName}
-          onInstructionChange={handleInstructionChange}
-        />
       )}
 
       <ItemFormModal
