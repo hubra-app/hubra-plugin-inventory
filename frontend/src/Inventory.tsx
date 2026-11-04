@@ -1,5 +1,6 @@
 import { colorText } from '@hubra/plugin-sdk'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Button, TextInput, Select, Badge, Paper, Text } from '@mantine/core'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@hubra/plugin-sdk'
@@ -66,6 +67,29 @@ export function InventoryScreen() {
 
   const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null)
   const [detailItem, setDetailItem] = useState<InventoryItem | null>(null)
+  // The open item is in the URL (/app/inventory/<id>), so search hits,
+  // notifications and the guide's back link open it again.
+  const { id: openId } = useParams()
+  const navigate = useNavigate()
+  const openItem = (item: InventoryItem) => {
+    setDetailItem(item)
+    navigate(`/app/inventory/${item.id}`)
+  }
+  const closeItem = () => {
+    setDetailItem(null)
+    if (openId) navigate('/app/inventory')
+  }
+  useEffect(() => {
+    if (!openId) {
+      setDetailItem(null)
+      return
+    }
+    if (loading) return
+    if (detailItem && String(detailItem.id) === openId) return
+    const found = items.find((item) => String(item.id) === openId)
+    if (found) setDetailItem(found)
+    else navigate('/app/inventory', { replace: true })
+  }, [openId, items, loading, detailItem, navigate])
 
   // Form state
   // 'new' opens the form for a new item, an item opens it for that item.
@@ -112,7 +136,7 @@ export function InventoryScreen() {
     try {
       await deleteInventoryItem(deleteTarget.id)
       queryClient.invalidateQueries({ queryKey: QK })
-      if (detailItem?.id === deleteTarget.id) setDetailItem(null)
+      if (detailItem?.id === deleteTarget.id) closeItem()
       notify(
         'info',
         t('inventory.item.removed', 'Gegenstand gelöscht'),
@@ -275,7 +299,7 @@ export function InventoryScreen() {
           data={pg.paged}
           loading={loading}
           emptyMessage={t('inventory.noItemsFound', 'Keine Gegenstände gefunden')}
-          onRowClick={(item) => setDetailItem(item)}
+          onRowClick={openItem}
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder={t('inventory.searchItems', 'Gegenstände suchen …')}
@@ -457,7 +481,7 @@ export function InventoryScreen() {
                           item.ownerName ??
                           t('inventory.noOwner', 'Keine Eigentümer:in')
                         }
-                        onClick={() => setDetailItem(item)}
+                        onClick={() => openItem(item)}
                         footer={
                           <div
                             style={{
@@ -529,11 +553,11 @@ export function InventoryScreen() {
       {detailItem && (
         <ItemDetailPanel
           item={detailItem}
-          onClose={() => setDetailItem(null)}
+          onClose={closeItem}
           access={accessTo(detailItem)}
           onEdit={() => {
             setFormTarget(detailItem)
-            setDetailItem(null)
+            closeItem()
           }}
           currentUserId={currentUserId}
           currentUserName={currentUserName}
