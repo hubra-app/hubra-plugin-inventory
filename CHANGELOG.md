@@ -1,6 +1,9 @@
-# Example
+# Inventory
 
-## 0.1.0
+## 2.0.0
 
-First version of the template: a notice board with one table, an API, a
-club-app screen, a setting and tests.
+Inventory is now a plugin instead of a part of Hubra. Clubs keep their
+items, checkouts, inductions, module setting and roles: the tables, the API
+and the permissions are the same as before.
+
+- Items are found by the club app's search (Ctrl+K).
