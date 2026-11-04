@@ -1,22 +1,46 @@
-import { registerPlugin } from '@hubra/plugin-sdk'
-import { IconNote } from '@tabler/icons-react'
-import { NotesScreen } from './NotesScreen'
+import { categoryColors, colorText, registerPlugin } from '@hubra/plugin-sdk'
+import { IconPackage } from '@tabler/icons-react'
+import { listInventory } from './api'
+import { InventoryScreen } from './Inventory'
+import { InventoryItemDetailScreen } from './InventoryItemDetail'
 import translations from './translations.json'
 
-// Everything here shows only while the module is on for the club and the
-// person has `perm`. Other places to add things: `tabs` (a tab on a built-in
-// screen) and `slots` (account.cards, inventory.item, settings.module.actions).
 registerPlugin({
-  id: 'example',
+  id: 'inventory',
   routes: [
     {
-      path: 'example',
-      module: 'example',
-      perm: 'example.notes.read',
-      component: NotesScreen,
+      path: 'inventory',
+      module: 'inventory',
+      perm: 'inventory.items.read',
+      component: InventoryScreen,
+    },
+    {
+      path: 'inventory/:id',
+      module: 'inventory',
+      perm: 'inventory.items.read',
+      component: InventoryItemDetailScreen,
     },
   ],
-  // The nav entry in hubra_example/__init__.py names this icon.
-  icons: { note: IconNote },
+  search: [
+    {
+      id: 'items',
+      module: 'inventory',
+      perm: 'inventory.items.read',
+      label: 'shell.searchKind.inventory',
+      color: {
+        bg: `color-mix(in srgb, ${categoryColors.purple} 12%, var(--hb-surface))`,
+        color: colorText(categoryColors.purple),
+      },
+      load: async () =>
+        (await listInventory()).map((item) => ({
+          id: item.id,
+          label: item.name,
+          sub: item.category,
+          keywords: item.description,
+          path: `/app/inventory/${item.id}`,
+        })),
+    },
+  ],
+  icons: { package: IconPackage },
   translations,
 })

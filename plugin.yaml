@@ -1,14 +1,14 @@
-id: example
-name: Example
-version: "0.1.0"
+id: inventory
+name: Inventory
+version: "2.0.0"
 hubra: ">=0.2,<1"
-description: "A starting point for a Hubra plugin: one table, an API, a screen and a test."
+description: "Tools, machines and materials: who owns and looks after them, checkouts with due dates, and inductions for items that need one."
 author: Hubra
-homepage: https://github.com/hubra-app/hubra-plugins-template
+homepage: https://github.com/hubra-app/hubra-plugin-inventory
 license: AGPL-3.0-or-later
-tags: [example]
-package: hubra_example
-modules: [example]
+tags: [inventory]
+package: hubra_inventory
+modules: [inventory]
 requires: [members]
 migrations: migrations
 frontend: frontend/dist/plugin.js
