@@ -94,7 +94,10 @@
       "status_pending": "Pending",
       "status_lost": "Lost",
       "status_retired": "Retired",
-      "instructed": "Instructed"
+      "instructed": "Instructed",
+      "itemNotFound": "This item does not exist (any more).",
+      "statusLabel": "Status",
+      "location": "Location"
     },
     "shell": {
       "nav": {
@@ -200,7 +203,10 @@
       "status_pending": "Ausstehend",
       "status_lost": "Verloren",
       "status_retired": "Ausgemustert",
-      "instructed": "Eingewiesen"
+      "instructed": "Eingewiesen",
+      "itemNotFound": "Diesen Gegenstand gibt es nicht (mehr).",
+      "statusLabel": "Status",
+      "location": "Standort"
     },
     "shell": {
       "nav": {

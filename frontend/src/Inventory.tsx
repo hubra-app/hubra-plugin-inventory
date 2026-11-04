@@ -4,7 +4,7 @@ import { Button, TextInput, Select, Badge, Paper, Text } from '@mantine/core'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@hubra/plugin-sdk'
 import { IconPlus, IconSearch } from '@tabler/icons-react'
-import { useToast, useAuth } from '@hubra/plugin-sdk'
+import { useToast, useAuth, useNav } from '@hubra/plugin-sdk'
 import {
   PageHead,
   usePagination,
@@ -35,7 +35,6 @@ import {
   STATUSES,
   STATUS_CONFIG,
 } from './constants'
-import { ItemDetailPanel } from './ItemDetailPanel'
 import { ItemFormModal } from './ItemFormModal'
 import { useItemAccess } from './access'
 
@@ -65,7 +64,8 @@ export function InventoryScreen() {
   const [view, setView] = useState<'table' | 'cards'>('cards')
 
   const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null)
-  const [detailItem, setDetailItem] = useState<InventoryItem | null>(null)
+  const { go } = useNav()
+  const openItem = (item: InventoryItem) => go(`/app/inventory/${item.id}`)
 
   // Form state
   // 'new' opens the form for a new item, an item opens it for that item.
@@ -84,8 +84,7 @@ export function InventoryScreen() {
   const saveItem = async (target: InventoryItem | null, input: InventoryItemCreate) => {
     try {
       if (target) {
-        const item = await updateInventoryItem(target.id, input)
-        if (detailItem?.id === item.id) setDetailItem(item)
+        await updateInventoryItem(target.id, input)
       } else {
         await createInventoryItem(input)
       }
@@ -112,7 +111,6 @@ export function InventoryScreen() {
     try {
       await deleteInventoryItem(deleteTarget.id)
       queryClient.invalidateQueries({ queryKey: QK })
-      if (detailItem?.id === deleteTarget.id) setDetailItem(null)
       notify(
         'info',
         t('inventory.item.removed', 'Gegenstand gelöscht'),
@@ -133,13 +131,7 @@ export function InventoryScreen() {
     }
   }
 
-  const handleInstructionChange = (updated: InventoryItem) => {
-    queryClient.invalidateQueries({ queryKey: QK })
-    setDetailItem(updated)
-  }
-
   const currentUserId = currentUser ? Number(currentUser.id) : null
-  const currentUserName = currentUser?.name ?? ''
 
   return (
     <div>
@@ -275,7 +267,7 @@ export function InventoryScreen() {
           data={pg.paged}
           loading={loading}
           emptyMessage={t('inventory.noItemsFound', 'Keine Gegenstände gefunden')}
-          onRowClick={(item) => setDetailItem(item)}
+          onRowClick={openItem}
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder={t('inventory.searchItems', 'Gegenstände suchen …')}
@@ -457,7 +449,7 @@ export function InventoryScreen() {
                           item.ownerName ??
                           t('inventory.noOwner', 'Keine Eigentümer:in')
                         }
-                        onClick={() => setDetailItem(item)}
+                        onClick={() => openItem(item)}
                         footer={
                           <div
                             style={{
@@ -524,21 +516,6 @@ export function InventoryScreen() {
             </>
           )}
         </Paper>
-      )}
-
-      {detailItem && (
-        <ItemDetailPanel
-          item={detailItem}
-          onClose={() => setDetailItem(null)}
-          access={accessTo(detailItem)}
-          onEdit={() => {
-            setFormTarget(detailItem)
-            setDetailItem(null)
-          }}
-          currentUserId={currentUserId}
-          currentUserName={currentUserName}
-          onInstructionChange={handleInstructionChange}
-        />
       )}
 
       <ItemFormModal
