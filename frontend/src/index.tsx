@@ -2,7 +2,6 @@ import { categoryColors, colorText, registerPlugin } from '@hubra/plugin-sdk'
 import { IconPackage } from '@tabler/icons-react'
 import { listInventory } from './api'
 import { InventoryScreen } from './Inventory'
-import { InventoryItemDetailScreen } from './InventoryItemDetail'
 import translations from './translations.json'
 
 registerPlugin({
@@ -18,7 +17,7 @@ registerPlugin({
       path: 'inventory/:id',
       module: 'inventory',
       perm: 'inventory.items.read',
-      component: InventoryItemDetailScreen,
+      component: InventoryScreen,
     },
   ],
   search: [
