@@ -70,9 +70,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: hubra-app/hubra
-          # Until hubra-app/hubra#171 is merged, test against its branch:
-          # Hubra's main still has the built-in module of the same name.
-          ref: claude/project-thread-8fbj1d
           path: hubra
           token: ${{ secrets.HUBRA_READ_TOKEN || github.token }}
           persist-credentials: false
@@ -130,9 +127,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: hubra-app/hubra
-          # Until hubra-app/hubra#171 is merged, test against its branch:
-          # Hubra's main still has the built-in module of the same name.
-          ref: claude/project-thread-8fbj1d
           path: hubra
           sparse-checkout: app/backend
           token: ${{ secrets.HUBRA_READ_TOKEN || github.token }}
