@@ -54,6 +54,15 @@ npm run build:plugin -- ../../plugins/inventory
 ## Release
 
 Bump `version` in `plugin.yaml`, add a `## <version>` section to
-`CHANGELOG.md`, merge, then publish a GitHub release tagged `v<version>`.
-The workflow tests, signs (after approval in the `plugin-signing`
-environment) and attaches `inventory-<version>.zip`.
+`CHANGELOG.md` and merge. Then tag the merged commit on main and push the tag:
+
+```sh
+git switch main && git pull
+git tag v<version> && git push origin v<version>
+```
+
+The workflow tests the plugin and builds its frontend, the `plugin-signing`
+job signs it after your approval, and only then is the GitHub release
+`v<version>` published, with `inventory-<version>.zip` and its `.sha256` attached. Files
+listed in `.releaseignore` stay out of the zip. Releases are immutable, so a
+published version never changes: fix a bad one with a new version.
