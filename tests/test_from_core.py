@@ -38,7 +38,7 @@ def test_system_permissions_list_the_inventory_keys(client, seeded_db, auth_head
 
 
 def test_create_own_and_field_rights_come_from_the_plugin(app):
-    from hubra.api.fields import iter_field_perms
+    from hubra.core.fields import iter_field_perms
     from hubra.api.permissions import extra_permissions
 
     with app.app_context():
