@@ -96,7 +96,14 @@
       "instructed": "Instructed",
       "itemNotFound": "This item does not exist (any more).",
       "statusLabel": "Status",
-      "location": "Location"
+      "location": "Location",
+      "widget": {
+        "checkedOut": "Checked out",
+        "checkedOutHint": "Items out right now, the ones due back first",
+        "overdue": "Overdue checkouts",
+        "overdueHint": "How many items are past their due date",
+        "count": "How many"
+      }
     },
     "shell": {
       "nav": {
@@ -204,7 +211,14 @@
       "instructed": "Eingewiesen",
       "itemNotFound": "Diesen Gegenstand gibt es nicht (mehr).",
       "statusLabel": "Status",
-      "location": "Standort"
+      "location": "Standort",
+      "widget": {
+        "checkedOut": "Ausgeliehen",
+        "checkedOutHint": "Was gerade ausgeliehen ist, zuerst was bald zurück muss",
+        "overdue": "Überfällige Ausleihen",
+        "overdueHint": "Wie viele Gegenstände über die Rückgabe hinaus sind",
+        "count": "Anzahl"
+      }
     },
     "shell": {
       "nav": {

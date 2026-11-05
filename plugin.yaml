@@ -12,3 +12,6 @@ modules: [inventory]
 requires: [members]
 migrations: migrations
 frontend: frontend/dist/plugin.js
+# The areas this plugin extends; Hubra refuses a plugin that touches one it
+# didn't list (docs/plugins.md).
+uses: [routes, settings, nav, tables, frontend, contracts]
