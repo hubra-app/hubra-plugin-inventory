@@ -43,7 +43,7 @@ def test_create_own_and_field_rights_come_from_the_plugin(app):
         from hubra.core.permissions import extra_permissions
     except ImportError:
         from hubra.api.fields import iter_field_perms
-        from hubra.api.permissions import extra_permissions
+        from hubra.core.permissions import extra_permissions
 
     with app.app_context():
         extra = {p["key"]: p for p in extra_permissions()}
