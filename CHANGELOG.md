@@ -1,5 +1,16 @@
 # Inventory
 
+## Unreleased
+
+- Other plugins read items through Hubra's contracts instead of this
+  plugin's code or tables: the queries `inventory.items.get` (by id) and
+  `inventory.items.list` (by name, with a search), and the event
+  `inventory.item.deleted`. Needs a Hubra with contracts (hubra#231).
+- Two dashboard widgets: "Checked out" (what is out right now, due back
+  first) and "Overdue checkouts" (a number tile). Members see them with the
+  right to read inventory (needs hubra#234).
+- plugin.yaml lists the areas it uses (`uses:`).
+
 ## 2.1.0
 
 - An item opens as its own page at /app/inventory/<id> instead of a side

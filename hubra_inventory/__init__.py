@@ -6,7 +6,15 @@ same, so clubs keep their items, their switch and their roles, and the
 plugins built on it (keys, guides) keep working.
 """
 
+from hubra.core.contracts import (
+    WidgetField,
+    event_contract,
+    query_contract,
+    widget_contract,
+)
 from hubra.core.modules import Blueprint, Module, NavItem, SettingField
+
+_C = "hubra_inventory.contracts"
 
 module = Module(
     code="inventory",
@@ -55,6 +63,49 @@ module = Module(
         ),
     ),
     tables=("inventory_items", "inventory_checkouts", "item_instructions"),
+    # What other plugins and the dashboards may use (Hubra docs/contracts.md).
+    provides=(
+        query_contract(
+            "inventory.items.get",
+            f"{_C}:get_items",
+            input=f"{_C}:ItemsIn",
+            output=f"{_C}:Item",
+            perm="inventory.items.read",
+            description="Items by id (deleted ones left out)",
+        ),
+        query_contract(
+            "inventory.items.list",
+            f"{_C}:list_items",
+            input=f"{_C}:ListIn",
+            output=f"{_C}:Item",
+            perm="inventory.items.read",
+            description="Items by name, optionally matching a search",
+        ),
+        event_contract(
+            "inventory.item.deleted",
+            f"{_C}:ItemDeleted",
+            description="An item was deleted",
+        ),
+        widget_contract(
+            "inventory.checked_out",
+            f"{_C}:checked_out",
+            label="inventory.widget.checkedOut",
+            description="inventory.widget.checkedOutHint",
+            size="m",
+            view="list",
+            perm="inventory.items.read",
+            fields=(WidgetField("count", "inventory.widget.count", "number", 5),),
+        ),
+        widget_contract(
+            "inventory.overdue",
+            f"{_C}:overdue",
+            label="inventory.widget.overdue",
+            description="inventory.widget.overdueHint",
+            size="s",
+            view="stat",
+            perm="inventory.items.read",
+        ),
+    ),
     permissions=(("inventory.items.create_own", "Add own inventory items"),),
     field_permissions=(
         ("inventory", "items", "name", "Item name"),

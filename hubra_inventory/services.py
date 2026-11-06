@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload
 from hubra.api.utils import log_audit
 from hubra.core.errors import raise_error
 from hubra.core.extensions import db
+from hubra.core.modules import emit
 from .models import (
     InventoryCheckout,
     InventoryItem,
@@ -246,6 +247,8 @@ class InventoryService:
             target_label=item.name,
         )
         db.session.delete(item)
+        # Plugins that keep something per item (guides, bookings) let it go.
+        emit("inventory.item.deleted", item_id=item_id)
 
     @staticmethod
     def add_instruction(
