@@ -19,6 +19,9 @@ _C = "hubra_inventory.contracts"
 
 module = Module(
     code="inventory",
+    # Access the standard roles get when a club first switches it on
+    # (docs/roles.md in hubra-app/hubra).
+    role_defaults={"member": "view", "board": "view", "secretary": "edit"},
     name="Inventory",
     description="Tools, machines and materials, checkouts and inductions",
     default_enabled=False,
