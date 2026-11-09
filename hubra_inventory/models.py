@@ -40,7 +40,9 @@ item_instructions = Table(
 
 # ── InventoryItem ─────────────────────────────────────────────────────────────
 
-_CATEGORIES = ("Tool", "Item", "Material")
+# "Key": keys, cards and fobs; the Keys add-on hands them out and keeps
+# their handover log.
+_CATEGORIES = ("Tool", "Item", "Material", "Key")
 _STATUSES = (
     "available",
     "in_use",
@@ -60,7 +62,7 @@ class InventoryItem(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(db.String(255), nullable=False)
-    # "Tool" | "Item" | "Material"
+    # "Tool" | "Item" | "Material" | "Key"
     category: Mapped[str] = mapped_column(db.String(50), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -68,6 +70,11 @@ class InventoryItem(db.Model):
         db.Integer, ForeignKey("members.id", ondelete="SET NULL"), nullable=True
     )
     responsible_id: Mapped[int | None] = mapped_column(
+        db.Integer, ForeignKey("members.id", ondelete="SET NULL"), nullable=True
+    )
+    # Who has the item right now when an add-on hands it out (Keys: who
+    # holds the key). A checkout keeps its borrower on the checkout instead.
+    holder_id: Mapped[int | None] = mapped_column(
         db.Integer, ForeignKey("members.id", ondelete="SET NULL"), nullable=True
     )
 
@@ -130,6 +137,9 @@ class InventoryItem(db.Model):
     responsible: Mapped["Member | None"] = relationship(  # type: ignore[name-defined]  # noqa: F821
         "Member", foreign_keys=[responsible_id]
     )
+    holder: Mapped["Member | None"] = relationship(  # type: ignore[name-defined]  # noqa: F821
+        "Member", foreign_keys=[holder_id]
+    )
     instructed_members: Mapped[list["Member"]] = relationship(  # type: ignore[name-defined]  # noqa: F821
         "Member", secondary=item_instructions
     )
@@ -177,3 +187,45 @@ class InventoryCheckout(db.Model):
 
     def __repr__(self) -> str:
         return f"<InventoryCheckout item_id={self.item_id} member_id={self.member_id}>"
+
+
+class InventoryHistoryEntry(db.Model):
+    """One entry in an item's history that isn't a checkout: what an add-on
+    did with it (Keys: handed out, taken back, lost, found, retired).
+
+    ``action`` is the add-on's word for it; the app shows it through the
+    translation ``inventory.history.<action>``. Checkouts stay in
+    ``inventory_checkouts`` and are shown in the same history.
+    """
+
+    __tablename__ = "inventory_item_history"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    item_id: Mapped[int] = mapped_column(
+        db.Integer,
+        ForeignKey("inventory_items.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    action: Mapped[str] = mapped_column(db.String(30), nullable=False)
+    # Who it was about (received or gave back the item).
+    member_id: Mapped[int | None] = mapped_column(
+        db.Integer, ForeignKey("members.id", ondelete="SET NULL"), nullable=True
+    )
+    # Who recorded it.
+    by_id: Mapped[int | None] = mapped_column(
+        db.Integer, ForeignKey("members.id", ondelete="SET NULL"), nullable=True
+    )
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    member: Mapped["Member | None"] = relationship(  # type: ignore[name-defined]  # noqa: F821
+        "Member", foreign_keys=[member_id]
+    )
+    by: Mapped["Member | None"] = relationship(  # type: ignore[name-defined]  # noqa: F821
+        "Member", foreign_keys=[by_id]
+    )

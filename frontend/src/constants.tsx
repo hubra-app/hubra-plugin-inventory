@@ -1,4 +1,4 @@
-import { categoryColors } from '@hubra/plugin-sdk'
+import { categoryColors, useModules } from '@hubra/plugin-sdk'
 import {
   IconTool,
   IconBox,
@@ -7,10 +7,36 @@ import {
   IconAlertCircle,
   IconClock,
   IconArchive,
+  IconKey,
 } from '@tabler/icons-react'
 import type { InventoryCategory, InventoryStatus } from './types'
 
-export const CATEGORIES: InventoryCategory[] = ['Tool', 'Item', 'Material']
+export const CATEGORIES: InventoryCategory[] = ['Tool', 'Item', 'Material', 'Key']
+
+type T = (key: string, fallback: string) => string
+
+export function categoryLabel(t: T, c: InventoryCategory): string {
+  switch (c) {
+    case 'Tool':
+      return t('inventory.tool', 'Werkzeug')
+    case 'Item':
+      return t('inventory.itemLabel', 'Gegenstand')
+    case 'Key':
+      return t('inventory.key', 'Schlüssel')
+    default:
+      return t('inventory.material', 'Material')
+  }
+}
+
+/**
+ * The types to offer: "Key" while the Keys add-on is on (it hands keys out
+ * and keeps their history) or some item already is a key.
+ */
+export function useCategories(items: { category: InventoryCategory }[] = []) {
+  const { has } = useModules()
+  const keys = has('inventory.keys') || items.some((i) => i.category === 'Key')
+  return keys ? CATEGORIES : CATEGORIES.filter((c) => c !== 'Key')
+}
 export const STATUSES: InventoryStatus[] = [
   'available',
   'in_use',
@@ -23,12 +49,14 @@ export const CATEGORY_ICONS: Record<InventoryCategory, React.ReactNode> = {
   Tool: <IconTool size={16} />,
   Item: <IconBox size={16} />,
   Material: <IconStack2 size={16} />,
+  Key: <IconKey size={16} />,
 }
 
 export const CATEGORY_COLORS: Record<InventoryCategory, string> = {
   Tool: categoryColors.blue,
   Item: categoryColors.green,
   Material: categoryColors.orange,
+  Key: categoryColors.yellow,
 }
 
 export const STATUS_CONFIG: Record<

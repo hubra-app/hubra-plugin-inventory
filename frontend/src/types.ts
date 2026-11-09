@@ -1,4 +1,4 @@
-export type InventoryCategory = "Tool" | "Item" | "Material";
+export type InventoryCategory = "Tool" | "Item" | "Material" | "Key";
 export type InventoryStatus =
   | "available"
   | "in_use"
@@ -25,6 +25,9 @@ export interface InventoryItem {
   ownerName: string | null;
   responsibleId: number | null;
   responsibleName: string | null;
+  /** Who has it now, when an add-on handed it out (Keys: the key holder). */
+  holderId: number | null;
+  holderName: string | null;
   visibility: InventoryVisibility;
   status: InventoryStatus;
   cost: string | null;
@@ -43,4 +46,16 @@ export interface InventoryItem {
   documents?: { name: string; url: string; type?: string }[];
   imageUrl?: string | null;
   notes?: string;
+}
+
+/** One line of an item's history: a checkout, a return, or what an add-on
+ * recorded (Keys: issue, return, lost, found, retire). */
+export interface InventoryHistoryEntry {
+  id: string;
+  action: string;
+  memberId: number | null;
+  memberName: string | null;
+  byName: string | null;
+  note: string | null;
+  at: string;
 }

@@ -103,7 +103,24 @@
         "overdue": "Overdue checkouts",
         "overdueHint": "How many items are past their due date",
         "count": "How many"
-      }
+      },
+      "key": "Key",
+      "history": {
+        "title": "History",
+        "empty": "Nothing has happened yet.",
+        "checkout": "Checked out",
+        "checkin": "Returned",
+        "issue": "Handed out",
+        "return": "Taken back",
+        "lost": "Lost",
+        "found": "Found again",
+        "retire": "Retired"
+      },
+      "holder": "Held by",
+      "number": "Number",
+      "byType": "By type",
+      "heldBy": "Held by {{name}}",
+      "notHandedOut": "Not handed out"
     },
     "shell": {
       "nav": {
@@ -218,7 +235,24 @@
         "overdue": "Überfällige Ausleihen",
         "overdueHint": "Wie viele Gegenstände über die Rückgabe hinaus sind",
         "count": "Anzahl"
-      }
+      },
+      "key": "Schlüssel",
+      "history": {
+        "title": "Verlauf",
+        "empty": "Noch nichts passiert.",
+        "checkout": "Ausgeliehen",
+        "checkin": "Zurückgebracht",
+        "issue": "Ausgegeben",
+        "return": "Zurückgenommen",
+        "lost": "Verloren",
+        "found": "Wieder gefunden",
+        "retire": "Ausgemustert"
+      },
+      "holder": "Bei",
+      "number": "Nummer",
+      "byType": "Nach Typ",
+      "heldBy": "Bei {{name}}",
+      "notHandedOut": "Nicht ausgegeben"
     },
     "shell": {
       "nav": {

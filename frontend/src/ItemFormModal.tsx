@@ -11,7 +11,7 @@ import type {
   InventoryStatus,
   InventoryVisibility,
 } from './types'
-import { STATUSES, STATUS_CONFIG } from './constants'
+import { STATUSES, STATUS_CONFIG, categoryLabel, useCategories } from './constants'
 import { LinkEditor } from './LinkEditor'
 
 /**
@@ -42,6 +42,7 @@ export function ItemFormModal({
 }) {
   const { t } = useT()
   const ownItem = !item && !canHandOn
+  const categories = useCategories(item ? [item] : [])
   const [fName, setFName] = useState(item?.name ?? '')
   const [fCat, setFCat] = useState<InventoryCategory>(item?.category ?? 'Tool')
   const [fDesc, setFDesc] = useState(item?.description ?? '')
@@ -75,7 +76,7 @@ export function ItemFormModal({
         status: fStatus,
         cost: fCost || null,
         links: fLinks,
-        instructionRequired: fInstructionRequired,
+        instructionRequired: fCat === 'Key' ? false : fInstructionRequired,
       })
     } finally {
       setSaving(false)
@@ -121,25 +122,24 @@ export function ItemFormModal({
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={12}>
           <Field label={t('inventory.category', 'Kategorie')}>
             <Select
-              data={[
-                { value: 'Tool', label: t('inventory.tool', 'Werkzeug') },
-                { value: 'Item', label: t('inventory.itemLabel', 'Gegenstand') },
-                { value: 'Material', label: t('inventory.material', 'Material') },
-              ]}
+              data={categories.map((c) => ({ value: c, label: categoryLabel(t, c) }))}
               value={fCat}
               onChange={(v) => setFCat((v ?? 'Tool') as InventoryCategory)}
             />
           </Field>
-          <Field label={t('common.status', 'Status')}>
-            <Select
-              data={STATUSES.map((s) => ({
-                value: s,
-                label: t(`inventory.status_${s}`, STATUS_CONFIG[s].label),
-              }))}
-              value={fStatus}
-              onChange={(v) => setFStatus((v ?? 'active') as InventoryStatus)}
-            />
-          </Field>
+          {/* A key's status follows its handovers in the Keys add-on. */}
+          {fCat !== 'Key' && (
+            <Field label={t('common.status', 'Status')}>
+              <Select
+                data={STATUSES.map((s) => ({
+                  value: s,
+                  label: t(`inventory.status_${s}`, STATUS_CONFIG[s].label),
+                }))}
+                value={fStatus}
+                onChange={(v) => setFStatus((v ?? 'active') as InventoryStatus)}
+              />
+            </Field>
+          )}
         </SimpleGrid>
         <Field label={t('inventory.descriptionOptional', 'Beschreibung (optional)')}>
           <Textarea
@@ -193,11 +193,13 @@ export function ItemFormModal({
         <Field label={t('inventory.links', 'Links')}>
           <LinkEditor links={fLinks} onChange={setFLinks} />
         </Field>
-        <Checkbox
-          checked={fInstructionRequired}
-          onChange={(e) => setFInstructionRequired(e.currentTarget.checked)}
-          label={t('inventory.instruction.required', 'Einweisung vor Gebrauch nötig')}
-        />
+        {fCat !== 'Key' && (
+          <Checkbox
+            checked={fInstructionRequired}
+            onChange={(e) => setFInstructionRequired(e.currentTarget.checked)}
+            label={t('inventory.instruction.required', 'Einweisung vor Gebrauch nötig')}
+          />
+        )}
       </div>
     </Modal>
   )

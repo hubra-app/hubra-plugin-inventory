@@ -13,6 +13,7 @@ from hubra.core.extensions import db
 from hubra.core.modules import emit
 from .models import (
     InventoryCheckout,
+    InventoryHistoryEntry,
     InventoryItem,
     item_instructions,
 )
@@ -136,9 +137,26 @@ def person_owner(item: InventoryItem) -> int | None:
     return None if item.owner.archived_at is not None else item.owner_id
 
 
+def announce_saved(item: InventoryItem) -> None:
+    """Tell the add-ons an item was added or changed (``inventory.item.saved``).
+
+    The Keys add-on keeps its key details for items of the type "Key" this
+    way, including the ones added here in Inventory.
+    """
+    emit(
+        "inventory.item.saved",
+        item_id=item.id,
+        name=item.name,
+        category=item.category,
+        status=item.status,
+        serial_number=item.serial_number,
+    )
+
+
 _LOAD_OPTS = [
     selectinload(InventoryItem.owner),
     selectinload(InventoryItem.responsible),
+    selectinload(InventoryItem.holder),
     selectinload(InventoryItem.instructed_members),
 ]
 
@@ -207,6 +225,7 @@ class InventoryService:
             "description",
             "owner_id",
             "responsible_id",
+            "holder_id",
             "visibility",
             "status",
             "cost",
@@ -232,6 +251,7 @@ class InventoryService:
             target_id=item.id,
             target_label=item.name,
         )
+        announce_saved(item)
         return item
 
     @staticmethod
@@ -338,6 +358,12 @@ class InventoryService:
         # see it available (Postgres; a no-op on SQLite).
         db.session.refresh(item, with_for_update=True)
 
+        if item.category == "Key":
+            raise_error(
+                409,
+                "KEY_HANDOVER",
+                "Keys are handed out with the Keys add-on, not checked out",
+            )
         if item.status not in ("available",):
             raise_error(
                 409,
@@ -489,6 +515,7 @@ class InventoryServiceItems:
             description=data.get("description"),
             owner_id=data.get("owner_id"),
             responsible_id=data.get("responsible_id"),
+            holder_id=data.get("holder_id"),
             visibility=data.get("visibility", "shared"),
             status=data.get("status", "available"),
             cost=data.get("cost"),
@@ -515,5 +542,69 @@ class InventoryServiceItems:
             target_label=item.name,
         )
 
+        announce_saved(item)
         db.session.refresh(item)
         return InventoryService.get(item.id)
+
+
+def item_history(item_id: int) -> list[dict]:
+    """An item's history, newest first: its checkouts and returns, and what
+    add-ons recorded (Keys: handovers)."""
+    rows: list[dict] = []
+    for e in db.session.scalars(
+        select(InventoryHistoryEntry)
+        .where(InventoryHistoryEntry.item_id == item_id)
+        .options(
+            selectinload(InventoryHistoryEntry.member),
+            selectinload(InventoryHistoryEntry.by),
+        )
+    ).all():
+        rows.append(
+            {
+                "id": f"h{e.id}",
+                "action": e.action,
+                "member_id": e.member_id,
+                "member_name": e.member.name if e.member else None,
+                "by_name": e.by.name if e.by else None,
+                "note": e.note,
+                "at": e.at,
+            }
+        )
+    for c in db.session.scalars(
+        select(InventoryCheckout)
+        .where(InventoryCheckout.item_id == item_id)
+        .options(selectinload(InventoryCheckout.member))
+    ).all():
+        who = c.member.name if c.member else None
+        rows.append(
+            {
+                "id": f"c{c.id}",
+                "action": "checkout",
+                "member_id": c.member_id,
+                "member_name": who,
+                "by_name": None,
+                "note": None,
+                "at": c.checked_out_at,
+            }
+        )
+        if c.returned_at is not None:
+            rows.append(
+                {
+                    "id": f"r{c.id}",
+                    "action": "checkin",
+                    "member_id": c.member_id,
+                    "member_name": who,
+                    "by_name": None,
+                    "note": c.condition_notes,
+                    "at": c.returned_at,
+                }
+            )
+
+    def _key(r):
+        at = r["at"]
+        return at if at.tzinfo else at.replace(tzinfo=timezone.utc)
+
+    rows.sort(key=_key, reverse=True)
+    for r in rows:
+        r["at"] = _key(r).isoformat()
+    return rows
