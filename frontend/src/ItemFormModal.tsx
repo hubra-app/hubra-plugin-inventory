@@ -52,7 +52,10 @@ export function ItemFormModal({
   const [fResponsible, setFResponsible] = useState<number | undefined>(
     item?.responsibleId ?? undefined,
   )
-  const [fVisibility, setFVisibility] = useState<InventoryVisibility>(item?.visibility ?? 'shared')
+  const [fVisibility, setFVisibility] = useState<InventoryVisibility>(
+    // A member adding their own thing lends it to the club; it stays theirs.
+    item?.visibility ?? (ownItem ? 'private' : 'shared'),
+  )
   const [fStatus, setFStatus] = useState<InventoryStatus>(item?.status ?? 'available')
   const [fCost, setFCost] = useState(item?.cost ?? '')
   const [fLinks, setFLinks] = useState<InventoryLink[]>(item?.links ?? [])

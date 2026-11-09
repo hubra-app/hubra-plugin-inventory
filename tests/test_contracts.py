@@ -185,3 +185,57 @@ def test_history_refuses_bad_input(app, db, items):
     with pytest.raises(contracts.ContractError):
         contracts.call("inventory.items.history.add", item_id=items[0].id,
                        action="Drop Table", actor=contracts.SYSTEM)
+def _two_members(db, seeded_db):
+    from hubra.core.models.user import User
+
+    out = []
+    for email in ("anna@test.ch", "ben@test.ch"):
+        user = User(email=email, first_name="Test", last_name="Member")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.flush()
+        m = Member(user_id=user.id, status="active", tier_id=seeded_db["tier"].id)
+        db.session.add(m)
+        db.session.flush()
+        out.append(m)
+    db.session.commit()
+    return out
+
+
+def test_lending_to_the_club(app, db, seeded_db):
+    """A member's own thing they lend to the club becomes an item that
+    stays theirs (Community moves its old "lends" entries over with this)."""
+    anna, other = _two_members(db, seeded_db)
+    got = contracts.call(
+        "inventory.items.lend",
+        member_id=anna.id,
+        name="Car trailer",
+        description="  1.5 t, needs a tow bar  ",
+        actor=contracts.SYSTEM,
+    )
+    assert got["lent_by"] == anna.id and got["category"] == "Item"
+    row = db.session.get(InventoryItem, got["id"])
+    assert (row.owner_id, row.visibility, row.status) == (anna.id, "private", "available")
+    assert row.description == "1.5 t, needs a tow bar"
+    # Club items are not lent by anyone.
+    club = InventoryItem(name="Drill", category="Tool", status="available")
+    db.session.add(club)
+    db.session.commit()
+    assert contracts.query("inventory.items.get", ids=[club.id],
+                           actor=contracts.SYSTEM)[0]["lent_by"] is None
+
+    with pytest.raises(contracts.Refused):
+        contracts.call("inventory.items.lend", member_id=999999, name="x",
+                       actor=contracts.SYSTEM)
+
+
+def test_members_lend_only_their_own_things(app, db, seeded_db, monkeypatch):
+    anna, other = _two_members(db, seeded_db)
+    monkeypatch.setattr("hubra.core.permissions.member_has_permission",
+                        lambda member, perm: True)
+    with pytest.raises(contracts.Refused):
+        contracts.call("inventory.items.lend", member_id=other.id, name="Beamer",
+                       actor=anna)
+    got = contracts.call("inventory.items.lend", member_id=anna.id, name="Beamer",
+                         actor=anna)
+    assert got["lent_by"] == anna.id

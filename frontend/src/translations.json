@@ -68,7 +68,7 @@
       "noOwner": "No owner",
       "noResponsible": "No responsible person",
       "owner": "Owner",
-      "private": "A person",
+      "private": "A member (lent to the club)",
       "privateShort": "Private",
       "recordCleared": "Record removed.",
       "recorded": "Recorded",
@@ -120,7 +120,12 @@
       "number": "Number",
       "byType": "By type",
       "heldBy": "Held by {{name}}",
-      "notHandedOut": "Not handed out"
+      "notHandedOut": "Not handed out",
+      "allOwners": "Club's and lent",
+      "clubOwned": "The club's own",
+      "lentByMembers": "Lent by members",
+      "lentBy": "Lent by {{name}}",
+      "lendToClub": "Lend something to the club"
     },
     "shell": {
       "nav": {
@@ -200,7 +205,7 @@
       "noOwner": "Keine Eigentümer:in",
       "noResponsible": "Keine verantwortliche Person",
       "owner": "Eigentümer:in",
-      "private": "Privatperson",
+      "private": "Ein Mitglied (dem Verein ausgeliehen)",
       "privateShort": "Privat",
       "recordCleared": "Eintrag entfernt.",
       "recorded": "Erfasst",
@@ -252,7 +257,12 @@
       "number": "Nummer",
       "byType": "Nach Typ",
       "heldBy": "Bei {{name}}",
-      "notHandedOut": "Nicht ausgegeben"
+      "notHandedOut": "Nicht ausgegeben",
+      "allOwners": "Vereinseigen und ausgeliehen",
+      "clubOwned": "Gehört dem Verein",
+      "lentByMembers": "Von Mitgliedern ausgeliehen",
+      "lentBy": "Ausgeliehen von {{name}}",
+      "lendToClub": "Dem Verein etwas ausleihen"
     },
     "shell": {
       "nav": {

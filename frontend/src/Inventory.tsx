@@ -69,6 +69,8 @@ export function InventoryScreen() {
   const [statusFilter, setStatusFilter] = useState<InventoryStatus | 'All'>(
     'All',
   )
+  // Who it belongs to: the club, or a member who lends it to the club.
+  const [ownerFilter, setOwnerFilter] = useState<'all' | 'shared' | 'private'>('all')
   const [search, setSearch] = useState('')
   // "types": one section per type, like a shelf per kind of thing.
   const [view, setView] = useState<'table' | 'cards' | 'types'>(() =>
@@ -82,11 +84,16 @@ export function InventoryScreen() {
 
   // Form state
   // 'new' opens the form for a new item, an item opens it for that item.
-  const [formTarget, setFormTarget] = useState<InventoryItem | 'new' | null>(null)
+  // ?lend=1 (linked from elsewhere) opens the form for something the
+  // member lends to the club.
+  const [formTarget, setFormTarget] = useState<InventoryItem | 'new' | null>(() =>
+    canCreate && params.get('lend') ? 'new' : null,
+  )
 
   const filtered = items.filter((item) => {
     if (catFilter !== 'All' && item.category !== catFilter) return false
     if (statusFilter !== 'All' && item.status !== statusFilter) return false
+    if (ownerFilter !== 'all' && item.visibility !== ownerFilter) return false
     if (search && !item.name.toLowerCase().includes(search.toLowerCase()))
       return false
     return true
@@ -157,6 +164,26 @@ export function InventoryScreen() {
 
   const currentUserId = currentUser ? Number(currentUser.id) : null
 
+  const ownerSelect = (
+    <Select
+      size="sm"
+      aria-label={t('inventory.visibility', 'Eigentum')}
+      data={[
+        { value: 'all', label: t('inventory.allOwners', 'Verein und ausgeliehen') },
+        { value: 'shared', label: t('inventory.clubOwned', 'Gehört dem Verein') },
+        { value: 'private', label: t('inventory.lentByMembers', 'Von Mitgliedern ausgeliehen') },
+      ]}
+      value={ownerFilter}
+      onChange={(v) => setOwnerFilter((v ?? 'all') as 'all' | 'shared' | 'private')}
+      style={{ width: 200 }}
+    />
+  )
+  // "Lent by Anna" for a member's own thing, otherwise the owner's name.
+  const ownerLabel = (item: InventoryItem) =>
+    item.visibility === 'private' && item.ownerName
+      ? t('inventory.lentBy', 'Ausgeliehen von {{name}}', { name: item.ownerName })
+      : (item.ownerName ?? t('inventory.noOwner', 'Keine Eigentümer:in'))
+
   const renderCard = (item: InventoryItem): ReactNode => {
     const sc = STATUS_CONFIG[item.status]
     const cc = CATEGORY_COLORS[item.category]
@@ -186,7 +213,7 @@ export function InventoryScreen() {
             ? item.holderName
               ? t('inventory.heldBy', 'Bei {{name}}', { name: item.holderName })
               : item.serialNumber || t('inventory.notHandedOut', 'Nicht ausgegeben')
-            : (item.ownerName ?? t('inventory.noOwner', 'Keine Eigentümer:in'))
+            : ownerLabel(item)
         }
         onClick={() => openItem(item)}
         footer={
@@ -252,7 +279,9 @@ export function InventoryScreen() {
           canCreate && (
             <Button variant="filled" onClick={() => setFormTarget('new')}>
               <IconPlus size={16} />
-              {t('inventory.addItem', 'Gegenstand hinzufügen')}
+              {canCreateAny
+                ? t('inventory.addItem', 'Gegenstand hinzufügen')
+                : t('inventory.lendToClub', 'Dem Verein etwas ausleihen')}
             </Button>
           )
         }
@@ -388,7 +417,7 @@ export function InventoryScreen() {
                         fontSize: 'var(--mantine-font-size-sm)',
                       }}
                     >
-                      {item.ownerName ?? t('inventory.noOwner', 'Keine Eigentümer:in')}
+                      {ownerLabel(item)}
                     </span>
                   ),
                 },
@@ -458,6 +487,7 @@ export function InventoryScreen() {
                 }
                 style={{ width: 140 }}
               />
+              {ownerSelect}
               <Seg options={viewOptions} value={view} onChange={(v) => setView(v as typeof view)} />
             </>
           }
@@ -530,6 +560,7 @@ export function InventoryScreen() {
                 }
                 style={{ width: 140 }}
               />
+              {ownerSelect}
               <Seg options={viewOptions} value={view} onChange={(v) => setView(v as typeof view)} />
             </div>
           </div>

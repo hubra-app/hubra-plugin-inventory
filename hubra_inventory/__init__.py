@@ -87,6 +87,14 @@ module = Module(
             perm="inventory.items.read",
             description="Items by name, optionally matching a search",
         ),
+        action_contract(
+            "inventory.items.lend",
+            f"{_C}:lend_item",
+            input=f"{_C}:LendIn",
+            output=f"{_C}:Item",
+            perm="inventory.items.create_own",
+            description="Record a member's own thing as lent to the club",
+        ),
         event_contract(
             "inventory.item.deleted",
             f"{_C}:ItemDeleted",
