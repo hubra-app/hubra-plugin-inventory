@@ -305,3 +305,6 @@ def add_self_instruction(item_id: int):
         raise
 
     return "", 204
+
+
+from . import guides  # noqa: E402,F401  (registers the guide routes)

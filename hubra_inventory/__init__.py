@@ -3,7 +3,8 @@
 Was built into Hubra up to 0.x as the module "inventory"; the module code,
 the tables, the API path and the permissions (inventory.items.*) stay the
 same, so clubs keep their items, their switch and their roles, and the
-plugins built on it (keys, guides) keep working.
+plugins built on it (keys) keep working. Since 2.4 it keeps the usage
+guide per item too, which was the Guides plugin before.
 """
 
 from hubra.core.contracts import (
@@ -68,7 +69,14 @@ module = Module(
         "inventory_checkouts",
         "item_instructions",
         "inventory_item_history",
+        "inventory_item_guides",
     ),
+    # The qualification an item's guide names (Qualifications plugin); without
+    # it the guide just shows none.
+    consumes={
+        "qualifications.kinds.list": ">=1,<2",
+        "qualifications.member.holds": ">=1,<2",
+    },
     # What other plugins and the dashboards may use (Hubra docs/contracts.md).
     provides=(
         query_contract(

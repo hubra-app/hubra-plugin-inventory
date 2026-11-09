@@ -3,6 +3,7 @@ import { IconPackage } from '@tabler/icons-react'
 import { listInventory } from './api'
 import { InventoryScreen } from './Inventory'
 import { InventoryItemDetailScreen } from './InventoryItemDetail'
+import { GuidePage } from './GuidePage'
 import translations from './translations.json'
 
 registerPlugin({
@@ -19,6 +20,12 @@ registerPlugin({
       module: 'inventory',
       perm: 'inventory.items.read',
       component: InventoryItemDetailScreen,
+    },
+    {
+      path: 'inventory/:id/guide',
+      module: 'inventory',
+      perm: 'inventory.items.read',
+      component: GuidePage,
     },
   ],
   search: [

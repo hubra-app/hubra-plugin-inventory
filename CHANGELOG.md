@@ -1,5 +1,21 @@
 # Inventory
 
+## 2.4.0
+
+- Usage guides per item live here now (they were the Guides plugin's, which
+  is now Qualifications 2.0; update both together). The item page shows the
+  guide's preview, `/app/inventory/<id>/guide` the whole guide with its table
+  of contents and the editor.
+- API: `GET`/`PUT /inventory/<id>/guide` (`guide`, `guide_url`,
+  `qualification_id`), and `GET /inventory/guide-qualifications`. Reading
+  takes the right to read the item; writing the right to change it, or being
+  its owner or responsible person.
+- The qualification an item takes comes from the Qualifications plugin
+  (queries `qualifications.kinds.list`, `qualifications.member.holds`, under
+  `consumes`); without it, guides work and show none.
+- New table `inventory_item_guides`. The migration copies the Guides
+  plugin's `item_guides` once, when that table exists.
+
 ## 2.3.0
 
 - Lending to the club lives here now. An item that belongs to a member

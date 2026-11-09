@@ -229,3 +229,33 @@ class InventoryHistoryEntry(db.Model):
     by: Mapped["Member | None"] = relationship(  # type: ignore[name-defined]  # noqa: F821
         "Member", foreign_keys=[by_id]
     )
+
+
+# ── ItemGuide ─────────────────────────────────────────────────────────────────
+
+
+class ItemGuide(db.Model):
+    """The usage guide of an item: Markdown and/or a link to a manual.
+
+    Until Inventory 2.4 this was the Guides plugin's ``item_guides``; the
+    migration copies those rows here. The qualification the item takes lives
+    in the Qualifications plugin, so only its id is kept (no foreign key);
+    its name and whether a member holds it come from that plugin's queries.
+    """
+
+    __tablename__ = "inventory_item_guides"
+
+    item_id: Mapped[int] = mapped_column(
+        db.Integer,
+        ForeignKey("inventory_items.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    guide: Mapped[str | None] = mapped_column(Text, nullable=True)
+    guide_url: Mapped[str | None] = mapped_column(db.String(500), nullable=True)
+    qualification_kind_id: Mapped[int | None] = mapped_column(db.Integer, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )

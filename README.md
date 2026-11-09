@@ -2,8 +2,8 @@
 
 A [Hubra](https://hubra.club) plugin for a club's tools, machines and
 materials: who owns and looks after each item, where it is, what it cost,
-checkouts with due dates, and inductions for items that need one before
-anyone may use them.
+checkouts with due dates, inductions for items that need one before
+anyone may use them, and a usage guide per item.
 
 **Plugin id** `inventory` · **Package** `hubra_inventory` · **Module** `inventory` · **Works with** Hubra `>=0.2,<1` (the version without the built-in Inventory module)
 
@@ -26,8 +26,24 @@ plugin keeps everything the same, so nothing has to be migrated by hand:
 The migration creates the tables only where they do not exist yet. Items
 also show up in the club app's search (Ctrl+K).
 
-[hubra-plugin-guides](https://github.com/hubra-app/hubra-plugin-guides)
-links guides to items when both plugins are on.
+## Guides
+
+Each item can have a usage guide: Markdown (steps, safety rules, what to
+check after use) and/or a link to a manual or video. The item page shows a
+short preview; the guide has its own page, `/app/inventory/<id>/guide`, with
+a table of contents, and `?edit=1` opens the editor. Whoever may change the
+item (the right `inventory.items.update`, or its owner or responsible
+person) may change its guide.
+
+A guide can name the qualification the item takes, when the
+[Qualifications plugin](https://github.com/hubra-app/hubra-plugin-guides) is
+on. The guide then shows it and whether the reader holds it, through that
+plugin's queries `qualifications.kinds.list` and
+`qualifications.member.holds`. It is shown, not enforced: inductions still
+decide who may check an item out.
+
+Up to 2.3 the guides belonged to the Guides plugin; 2.4 copies them here
+once (from `item_guides`, when that table exists).
 
 ## Layout
 

@@ -43,6 +43,7 @@ import {
 import { CATEGORY_COLORS, CATEGORY_ICONS, STATUS_CONFIG, categoryLabel } from './constants'
 import { ItemFormModal } from './ItemFormModal'
 import { useItemAccess } from './access'
+import { GuideSection } from './GuideSection'
 
 /* One item as its own page, like a member's page in Hubra: a back link, a
  * header card with the item, its badges, actions and key figures, then a
@@ -391,7 +392,8 @@ export function InventoryItemDetailScreen() {
               </Group>
             </PanelSection>
           )}
-          {/* Other plugins add to the item here, e.g. the usage guide. */}
+          {item.category !== 'Key' && <GuideSection itemId={Number(item.id)} />}
+          {/* Other plugins add to the item here. */}
           <PluginSlot name="inventory.item" props={{ itemId: Number(item.id) }} />
         </Paper>
       </div>

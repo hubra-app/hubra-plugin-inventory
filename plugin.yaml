@@ -1,8 +1,8 @@
 id: inventory
 name: Inventory
-version: "2.3.0"
+version: "2.4.0"
 hubra: ">=0.2,<1"
-description: "Tools, machines and materials: who owns and looks after them, checkouts with due dates, and inductions for items that need one."
+description: "Tools, machines and materials: who owns and looks after them, checkouts with due dates, inductions and a usage guide per item."
 author: Hubra
 homepage: https://github.com/hubra-app/hubra-plugin-inventory
 license: AGPL-3.0-or-later

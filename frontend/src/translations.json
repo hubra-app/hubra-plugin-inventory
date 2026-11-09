@@ -125,7 +125,45 @@
       "clubOwned": "The club's own",
       "lentByMembers": "Lent by members",
       "lentBy": "Lent by {{name}}",
-      "lendToClub": "Lend something to the club"
+      "lendToClub": "Lend something to the club",
+      "guide": {
+        "title": "Guide",
+        "add": "Add guide",
+        "saved": "Guide saved",
+        "placeholder": "Steps, safety rules, what to check after use. Markdown works.",
+        "link": "Link to manual or video",
+        "openLink": "Open manual",
+        "read": "Read guide",
+        "backToItem": "Back to the item",
+        "backToInventory": "Back to the inventory",
+        "notFound": "Guide not found",
+        "notFoundDesc": "The item may have been deleted.",
+        "sections_one": "{{count}} section",
+        "sections_other": "{{count}} sections",
+        "minutes_one": "{{count}} min read",
+        "minutes_other": "{{count}} min read",
+        "write": "Write",
+        "preview": "Preview",
+        "previewEmpty": "Nothing to preview yet.",
+        "headingsHint": "Start a section with ## Heading: it gets its own entry in the table of contents and a link of its own.",
+        "contents": "Contents",
+        "needsInstruction": "This item needs an induction before first use.",
+        "seeItem": "See who is inducted",
+        "onlyLink": "This guide is a link to the manual.",
+        "none": "There is no guide for this item yet.",
+        "qualification": {
+          "needed": "Qualification it takes",
+          "neededHint": "Shown with the guide, with whether the reader holds it. Comes from the Qualifications plugin.",
+          "noneNeeded": "None",
+          "takes": "It takes: {{name}}.",
+          "yours": {
+            "valid": "You have it.",
+            "soon": "Yours expires soon.",
+            "expired": "Yours has expired.",
+            "none": "You don't have it yet."
+          }
+        }
+      }
     },
     "shell": {
       "nav": {
@@ -262,7 +300,45 @@
       "clubOwned": "Gehört dem Verein",
       "lentByMembers": "Von Mitgliedern ausgeliehen",
       "lentBy": "Ausgeliehen von {{name}}",
-      "lendToClub": "Dem Verein etwas ausleihen"
+      "lendToClub": "Dem Verein etwas ausleihen",
+      "guide": {
+        "title": "Anleitung",
+        "add": "Anleitung erfassen",
+        "saved": "Anleitung gespeichert",
+        "placeholder": "Schritte, Sicherheitsregeln, was nach dem Gebrauch zu prüfen ist. Markdown geht.",
+        "link": "Link zum Handbuch oder Video",
+        "openLink": "Handbuch öffnen",
+        "read": "Anleitung lesen",
+        "backToItem": "Zurück zum Gegenstand",
+        "backToInventory": "Zurück zum Inventar",
+        "notFound": "Anleitung nicht gefunden",
+        "notFoundDesc": "Der Gegenstand wurde vielleicht gelöscht.",
+        "sections_one": "{{count}} Abschnitt",
+        "sections_other": "{{count}} Abschnitte",
+        "minutes_one": "{{count}} Min. Lesezeit",
+        "minutes_other": "{{count}} Min. Lesezeit",
+        "write": "Schreiben",
+        "preview": "Vorschau",
+        "previewEmpty": "Noch nichts zum Anzeigen.",
+        "headingsHint": "Ein Abschnitt beginnt mit ## Titel: Er erscheint im Inhaltsverzeichnis und hat einen eigenen Link.",
+        "contents": "Inhalt",
+        "needsInstruction": "Für diesen Gegenstand ist vor dem ersten Gebrauch eine Einweisung nötig.",
+        "seeItem": "Wer eingewiesen ist",
+        "onlyLink": "Diese Anleitung ist ein Link zum Handbuch.",
+        "none": "Für diesen Gegenstand gibt es noch keine Anleitung.",
+        "qualification": {
+          "needed": "Nötige Qualifikation",
+          "neededHint": "Wird bei der Anleitung angezeigt, mit dem Hinweis, ob die Leserin oder der Leser sie hat. Kommt aus dem Plugin Qualifikationen.",
+          "noneNeeded": "Keine",
+          "takes": "Nötig: {{name}}.",
+          "yours": {
+            "valid": "Du hast sie.",
+            "soon": "Deine läuft bald ab.",
+            "expired": "Deine ist abgelaufen.",
+            "none": "Du hast sie noch nicht."
+          }
+        }
+      }
     },
     "shell": {
       "nav": {
