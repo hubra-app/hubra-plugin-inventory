@@ -29,7 +29,8 @@ import {
 } from './api'
 import { QK } from './api'
 import {
-  CATEGORIES,
+  categoryLabel,
+  useCategories,
   CATEGORY_COLORS,
   CATEGORY_ICONS,
   STATUSES,
@@ -56,6 +57,7 @@ export function InventoryScreen() {
     queryKey: QK,
     queryFn: () => listInventory(),
   })
+  const categories = useCategories(items)
   const [catFilter, setCatFilter] = useState<InventoryCategory | 'All'>('All')
   const [statusFilter, setStatusFilter] = useState<InventoryStatus | 'All'>(
     'All',
@@ -202,11 +204,7 @@ export function InventoryScreen() {
                     background: `color-mix(in srgb, ${CATEGORY_COLORS[item.category]} 7%, transparent)`,
                   }}
                 >
-                  {item.category === 'Tool'
-                    ? t('inventory.tool', 'Werkzeug')
-                    : item.category === 'Item'
-                      ? t('inventory.itemLabel', 'Gegenstand')
-                      : t('inventory.material', 'Material')}
+                  {categoryLabel(t, item.category)}
                 </Badge>
               ),
             },
@@ -278,18 +276,14 @@ export function InventoryScreen() {
               active: catFilter === 'All',
               onClick: () => setCatFilter('All'),
             },
-            ...CATEGORIES.map((c) => ({
+            ...categories.map((c) => ({
               label: (
                 <>
                   <span
                     className="dot"
                     style={{ background: CATEGORY_COLORS[c] }}
                   />
-                  {c === 'Tool'
-                    ? t('inventory.tool', 'Werkzeug')
-                    : c === 'Item'
-                      ? t('inventory.itemLabel', 'Gegenstand')
-                      : t('inventory.material', 'Material')}
+                  {categoryLabel(t, c)}
                 </>
               ),
               value: `cat-${c}`,
@@ -363,7 +357,7 @@ export function InventoryScreen() {
               >
                 {t('inventory.allCategories', 'Alle Kategorien')}
               </button>
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <button
                   key={c}
                   className={`chip${catFilter === c ? ' on' : ''}`}
@@ -373,11 +367,7 @@ export function InventoryScreen() {
                     className="dot"
                     style={{ background: CATEGORY_COLORS[c] }}
                   />
-                  {c === 'Tool'
-                    ? t('inventory.tool', 'Werkzeug')
-                    : c === 'Item'
-                      ? t('inventory.itemLabel', 'Gegenstand')
-                      : t('inventory.material', 'Material')}
+                  {categoryLabel(t, c)}
                 </button>
               ))}
             </div>

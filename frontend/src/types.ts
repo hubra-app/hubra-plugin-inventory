@@ -1,4 +1,4 @@
-export type InventoryCategory = "Tool" | "Item" | "Material";
+export type InventoryCategory = "Tool" | "Item" | "Material" | "Key";
 export type InventoryStatus =
   | "available"
   | "in_use"

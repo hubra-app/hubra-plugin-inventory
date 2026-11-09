@@ -40,7 +40,9 @@ item_instructions = Table(
 
 # ── InventoryItem ─────────────────────────────────────────────────────────────
 
-_CATEGORIES = ("Tool", "Item", "Material")
+# "Key": keys, cards and fobs; the Keys add-on hands them out and keeps
+# their handover log.
+_CATEGORIES = ("Tool", "Item", "Material", "Key")
 _STATUSES = (
     "available",
     "in_use",
@@ -60,7 +62,7 @@ class InventoryItem(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(db.String(255), nullable=False)
-    # "Tool" | "Item" | "Material"
+    # "Tool" | "Item" | "Material" | "Key"
     category: Mapped[str] = mapped_column(db.String(50), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 

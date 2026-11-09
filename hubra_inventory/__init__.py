@@ -8,6 +8,7 @@ plugins built on it (keys, guides) keep working.
 
 from hubra.core.contracts import (
     WidgetField,
+    action_contract,
     event_contract,
     query_contract,
     widget_contract,
@@ -85,6 +86,28 @@ module = Module(
             "inventory.item.deleted",
             f"{_C}:ItemDeleted",
             description="An item was deleted",
+        ),
+        event_contract(
+            "inventory.item.saved",
+            f"{_C}:ItemSaved",
+            description="An item was added or changed",
+        ),
+        # For add-ons that keep a type of item of their own (Keys: "Key").
+        action_contract(
+            "inventory.items.save",
+            f"{_C}:save_item",
+            input=f"{_C}:SaveIn",
+            output=f"{_C}:Item",
+            perm="inventory.items.update",
+            description="Add an item (no item_id) or change the fields given",
+        ),
+        action_contract(
+            "inventory.items.delete",
+            f"{_C}:delete_item",
+            input=f"{_C}:DeleteIn",
+            output=f"{_C}:Deleted",
+            perm="inventory.items.delete",
+            description="Delete an item; one already gone is fine",
         ),
         widget_contract(
             "inventory.checked_out",

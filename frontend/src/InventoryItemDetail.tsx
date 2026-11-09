@@ -38,7 +38,7 @@ import {
   updateInventoryItem,
   type InventoryItemCreate,
 } from './api'
-import { CATEGORY_COLORS, CATEGORY_ICONS, STATUS_CONFIG } from './constants'
+import { CATEGORY_COLORS, CATEGORY_ICONS, STATUS_CONFIG, categoryLabel } from './constants'
 import { ItemFormModal } from './ItemFormModal'
 import { useItemAccess } from './access'
 
@@ -102,12 +102,7 @@ export function InventoryItemDetailScreen() {
   const isSelfInstructed = me !== null && item.instructedMemberIds.includes(me)
   const sc = STATUS_CONFIG[item.status]
   const cc = CATEGORY_COLORS[item.category]
-  const categoryLabel =
-    item.category === 'Tool'
-      ? t('inventory.tool', 'Werkzeug')
-      : item.category === 'Item'
-        ? t('inventory.itemLabel', 'Gegenstand')
-        : t('inventory.material', 'Material')
+  const typeLabel = categoryLabel(t, item.category)
   const refresh = () => queryClient.invalidateQueries({ queryKey: QK })
   const fail = (err: unknown) =>
     notify('error', t('inventory.failed', 'Fehler'), err instanceof Error ? err.message : t('common.unknownError', 'Unbekannter Fehler'))
@@ -213,7 +208,7 @@ export function InventoryItemDetailScreen() {
             </Title>
             <Group gap={8} mt={8}>
               <Badge variant="light" style={{ color: colorText(cc), background: `color-mix(in srgb, ${cc} 9%, transparent)` }}>
-                {categoryLabel}
+                {typeLabel}
               </Badge>
               <Badge
                 variant="light"
@@ -271,7 +266,7 @@ export function InventoryItemDetailScreen() {
                 {item.description}
               </Text>
             )}
-            <Row label={t('inventory.category', 'Kategorie')}>{categoryLabel}</Row>
+            <Row label={t('inventory.category', 'Kategorie')}>{typeLabel}</Row>
             <Row label={t('inventory.statusLabel', 'Status')}>{t(`inventory.status_${item.status}`, sc.label)}</Row>
             <Row label={t('inventory.owner', 'Eigentümer:in')}>{item.ownerName ?? '—'}</Row>
             <Row label={t('inventory.responsible', 'Verantwortlich')}>{item.responsibleName ?? '—'}</Row>
@@ -306,7 +301,8 @@ export function InventoryItemDetailScreen() {
         </div>
 
         <Paper withBorder style={{ overflow: 'hidden' }}>
-          {item.instructionRequired ? (
+          {/* A key needs no induction: the Keys add-on hands it out below. */}
+          {item.category === 'Key' ? null : item.instructionRequired ? (
             <PanelSection
               label={t('inventory.instructionRequired', 'Einweisung nötig')}
               right={

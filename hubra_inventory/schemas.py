@@ -5,7 +5,7 @@ from marshmallow import EXCLUDE, RAISE, fields, validate
 from hubra.core.extensions import ma
 from .models import InventoryItem
 
-_CATEGORIES = ["Tool", "Item", "Material"]
+_CATEGORIES = ["Tool", "Item", "Material", "Key"]
 _STATUSES = [
     "available",
     "in_use",

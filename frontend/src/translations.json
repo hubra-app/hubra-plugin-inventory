@@ -103,7 +103,8 @@
         "overdue": "Overdue checkouts",
         "overdueHint": "How many items are past their due date",
         "count": "How many"
-      }
+      },
+      "key": "Key"
     },
     "shell": {
       "nav": {
@@ -218,7 +219,8 @@
         "overdue": "Überfällige Ausleihen",
         "overdueHint": "Wie viele Gegenstände über die Rückgabe hinaus sind",
         "count": "Anzahl"
-      }
+      },
+      "key": "Schlüssel"
     },
     "shell": {
       "nav": {

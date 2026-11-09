@@ -1,7 +1,18 @@
 # Inventory
 
-## Unreleased
+## 2.2.0
 
+- New item type **Key** (keys, cards and fobs). With the Keys add-on on,
+  every key is an inventory item of this type: it shows in the inventory
+  list and search with the other items, and its page shows who holds it,
+  the handover buttons and its history (from Keys). A key has no induction
+  and isn't checked out: Keys hands it out, and its status follows (handed
+  out = in use, lost, retired). Checking a key out is refused
+  (`KEY_HANDOVER`).
+- For add-ons that keep a type of item of their own: the actions
+  `inventory.items.save` (add an item, or change the fields given) and
+  `inventory.items.delete`, and the event `inventory.item.saved` when an
+  item is added or changed, in Inventory or through the action.
 - Other plugins read items through Hubra's contracts instead of this
   plugin's code or tables: the queries `inventory.items.get` (by id) and
   `inventory.items.list` (by name, with a search), and the event
