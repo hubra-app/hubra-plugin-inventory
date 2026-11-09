@@ -1,6 +1,6 @@
 id: inventory
 name: Inventory
-version: "2.1.0"
+version: "2.3.0"
 hubra: ">=0.2,<1"
 description: "Tools, machines and materials: who owns and looks after them, checkouts with due dates, and inductions for items that need one."
 author: Hubra

@@ -63,7 +63,12 @@ module = Module(
             perms=("inventory.items.read",),
         ),
     ),
-    tables=("inventory_items", "inventory_checkouts", "item_instructions"),
+    tables=(
+        "inventory_items",
+        "inventory_checkouts",
+        "item_instructions",
+        "inventory_item_history",
+    ),
     # What other plugins and the dashboards may use (Hubra docs/contracts.md).
     provides=(
         query_contract(
@@ -94,6 +99,36 @@ module = Module(
             "inventory.item.deleted",
             f"{_C}:ItemDeleted",
             description="An item was deleted",
+        ),
+        event_contract(
+            "inventory.item.saved",
+            f"{_C}:ItemSaved",
+            description="An item was added or changed",
+        ),
+        # For add-ons that keep a type of item of their own (Keys: "Key").
+        action_contract(
+            "inventory.items.save",
+            f"{_C}:save_item",
+            input=f"{_C}:SaveIn",
+            output=f"{_C}:Item",
+            perm="inventory.items.update",
+            description="Add an item (no item_id) or change the fields given",
+        ),
+        action_contract(
+            "inventory.items.history.add",
+            f"{_C}:add_history",
+            input=f"{_C}:HistoryIn",
+            output=f"{_C}:HistoryRef",
+            perm="inventory.items.update",
+            description="Add an entry to an item's history (Keys: a handover)",
+        ),
+        action_contract(
+            "inventory.items.delete",
+            f"{_C}:delete_item",
+            input=f"{_C}:DeleteIn",
+            output=f"{_C}:Deleted",
+            perm="inventory.items.delete",
+            description="Delete an item; one already gone is fine",
         ),
         widget_contract(
             "inventory.checked_out",

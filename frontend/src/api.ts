@@ -7,6 +7,7 @@ import type {
   InventoryStatus,
   InventoryVisibility,
   InventoryLink,
+  InventoryHistoryEntry,
 } from './types';
 
 interface BackendInventoryItem {
@@ -18,6 +19,8 @@ interface BackendInventoryItem {
   owner_name: string | null;
   responsible_id: number | null;
   responsible_name: string | null;
+  holder_id?: number | null;
+  holder_name?: string | null;
   visibility: string;
   status: string;
   cost: string | null;
@@ -48,6 +51,8 @@ function adapt(b: BackendInventoryItem): InventoryItem {
     ownerName: b.owner_name,
     responsibleId: b.responsible_id,
     responsibleName: b.responsible_name,
+    holderId: b.holder_id ?? null,
+    holderName: b.holder_name ?? null,
     visibility: b.visibility as InventoryVisibility,
     status: b.status as InventoryStatus,
     cost: b.cost,
@@ -186,4 +191,28 @@ export interface InventoryCheckout {
   expectedReturnAt: string | null;
   returnedAt: string | null;
   conditionNotes: string | null;
+}
+
+interface BackendHistoryEntry {
+  id: string;
+  action: string;
+  member_id: number | null;
+  member_name: string | null;
+  by_name: string | null;
+  note: string | null;
+  at: string;
+}
+
+/** Checkouts, returns and what add-ons recorded (Keys: handovers), newest first. */
+export async function getItemHistory(itemId: string): Promise<InventoryHistoryEntry[]> {
+  const rows = await apiFetch<BackendHistoryEntry[]>(`/inventory/${itemId}/history`);
+  return rows.map((r) => ({
+    id: r.id,
+    action: r.action,
+    memberId: r.member_id,
+    memberName: r.member_name,
+    byName: r.by_name,
+    note: r.note,
+    at: r.at,
+  }));
 }
