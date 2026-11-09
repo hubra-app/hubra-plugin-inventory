@@ -145,3 +145,43 @@ def test_a_key_can_be_added_in_inventory(client, auth_headers):
     resp = client.post("/api/v1/inventory/", json={"name": "Shed", "category": "Key"})
     assert resp.status_code == 201
     assert resp.get_json()["category"] == "Key"
+
+
+def test_holder_and_history(client, auth_headers, app, db, seeded_db):
+    member = db.session.query(Member).first()
+    made = contracts.call(
+        # Not a "Key": with Keys installed, Keys would own a key's holder.
+        "inventory.items.save", name="Ladder", category="Item", status="in_use",
+        holder_id=member.id, actor=contracts.SYSTEM,
+    )
+    assert made["holder_id"] == member.id
+    contracts.call(
+        "inventory.items.history.add", item_id=made["id"], action="issue",
+        member_id=member.id, note="at the AGM", actor=contracts.SYSTEM,
+    )
+    db.session.add(InventoryCheckout(
+        item_id=made["id"], member_id=member.id,
+        checked_out_at=datetime.now(timezone.utc) - timedelta(days=3),
+        returned_at=datetime.now(timezone.utc) - timedelta(days=2),
+    ))
+    db.session.commit()
+
+    body = client.get(f"/api/v1/inventory/{made['id']}").get_json()
+    assert body["holder_id"] == member.id and body["holder_name"] == member.name
+    history = client.get(f"/api/v1/inventory/{made['id']}/history").get_json()
+    assert [h["action"] for h in history] == ["issue", "checkin", "checkout"]
+    assert history[0]["note"] == "at the AGM"
+
+    # Taken back: the holder goes.
+    contracts.call("inventory.items.save", item_id=made["id"], holder_id=None,
+                   status="available", actor=contracts.SYSTEM)
+    assert db.session.get(InventoryItem, made["id"]).holder_id is None
+
+
+def test_history_refuses_bad_input(app, db, items):
+    with pytest.raises(contracts.Refused):
+        contracts.call("inventory.items.history.add", item_id=99999, action="issue",
+                       actor=contracts.SYSTEM)
+    with pytest.raises(contracts.ContractError):
+        contracts.call("inventory.items.history.add", item_id=items[0].id,
+                       action="Drop Table", actor=contracts.SYSTEM)

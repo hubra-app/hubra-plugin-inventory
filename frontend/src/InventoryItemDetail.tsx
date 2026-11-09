@@ -6,6 +6,7 @@ import {
   IconArrowLeft,
   IconCircleCheck,
   IconExternalLink,
+  IconHistory,
   IconInfoCircle,
   IconLink,
   IconPackage,
@@ -30,6 +31,7 @@ import {
 } from '@hubra/plugin-sdk'
 import {
   QK,
+  getItemHistory,
   addInstruction,
   addSelfInstruction,
   deleteInventoryItem,
@@ -270,6 +272,14 @@ export function InventoryItemDetailScreen() {
             <Row label={t('inventory.statusLabel', 'Status')}>{t(`inventory.status_${item.status}`, sc.label)}</Row>
             <Row label={t('inventory.owner', 'Eigentümer:in')}>{item.ownerName ?? '—'}</Row>
             <Row label={t('inventory.responsible', 'Verantwortlich')}>{item.responsibleName ?? '—'}</Row>
+            {(item.holderName || item.category === 'Key') && (
+              <Row label={t('inventory.holder', 'Bei')}>{item.holderName ?? '—'}</Row>
+            )}
+            {item.serialNumber && (
+              <Row label={t('inventory.number', 'Nummer')} mono>
+                {item.serialNumber}
+              </Row>
+            )}
             {item.location && <Row label={t('inventory.location', 'Standort')}>{item.location}</Row>}
             {item.cost && (
               <Row label={t('inventory.cost', 'Kosten')} mono>
@@ -277,6 +287,7 @@ export function InventoryItemDetailScreen() {
               </Row>
             )}
           </Card>
+          <HistoryCard itemId={item.id} />
           {item.links.length > 0 && (
             <Card icon={<IconLink size={16} />} title={t('inventory.links', 'Links')}>
               <Stack gap={6} px={16} py={12}>
@@ -414,6 +425,40 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
       <div style={{ fontSize: 'var(--mantine-font-size-xs)', color: 'var(--hb-text-2)', marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 'var(--mantine-font-size-md)', fontWeight: 600, color: 'var(--hb-text)' }}>{children}</div>
     </div>
+  )
+}
+
+/** Checkouts, returns and what add-ons recorded (Keys: handovers). */
+function HistoryCard({ itemId }: { itemId: string }) {
+  const { t } = useT()
+  const { data: history = [] } = useQuery({
+    queryKey: [...QK, itemId, 'history'],
+    queryFn: () => getItemHistory(itemId),
+  })
+  return (
+    <Card icon={<IconHistory size={16} />} title={t('inventory.history.title', 'Verlauf')}>
+      {history.length === 0 ? (
+        <Text fz="sm" px={16} py={12} style={{ color: 'var(--hb-text-3)' }}>
+          {t('inventory.history.empty', 'Noch nichts passiert.')}
+        </Text>
+      ) : (
+        <div data-testid="item-history">
+          {history.map((h) => (
+            <div key={h.id} style={{ padding: '10px 16px', borderBottom: '1px solid var(--hb-border)' }}>
+              <Text fz="sm">
+                <strong>{t(`inventory.history.${h.action}`, h.action)}</strong>
+                {h.memberName && <> · {h.memberName}</>}
+              </Text>
+              <Text fz="xs" style={{ color: 'var(--hb-text-3)' }}>
+                {new Date(h.at).toLocaleString()}
+                {h.byName && <> · {h.byName}</>}
+                {h.note && <> · {h.note}</>}
+              </Text>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   )
 }
 

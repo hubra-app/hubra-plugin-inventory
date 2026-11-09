@@ -20,7 +20,13 @@ from sqlalchemy import func, select
 from hubra.core.contracts import Refused
 from hubra.core.extensions import db
 
-from .models import _CATEGORIES, _STATUSES, InventoryCheckout, InventoryItem
+from .models import (
+    _CATEGORIES,
+    _STATUSES,
+    InventoryCheckout,
+    InventoryHistoryEntry,
+    InventoryItem,
+)
 
 MAX_ITEMS = 500
 
@@ -44,6 +50,7 @@ class Item(BaseModel):
     location: str | None = None
     instruction_required: bool = False
     serial_number: str | None = None
+    holder_id: int | None = None
 
 
 class ItemDeleted(BaseModel):
@@ -75,7 +82,26 @@ class SaveIn(BaseModel):
     location: str | None = Field(default=None, max_length=255)
     serial_number: str | None = Field(default=None, max_length=255)
     notes: str | None = None
+    # Who has it now (an add-on handing it out); null takes it back.
+    holder_id: int | None = None
     actor_id: int | None = None
+
+
+class HistoryIn(BaseModel):
+    """One entry in an item's history. ``action`` is the add-on's word
+    ("issue", "return", ...), shown as ``inventory.history.<action>``."""
+
+    item_id: int
+    action: str = Field(min_length=1, max_length=30, pattern=r"^[a-z_]+$")
+    member_id: int | None = None
+    by_id: int | None = None
+    note: str | None = None
+    # When it happened, for entries moved over from before; now if unset.
+    at: datetime | None = None
+
+
+class HistoryRef(BaseModel):
+    id: int
 
 
 class DeleteIn(BaseModel):
@@ -96,6 +122,7 @@ def _item(row: InventoryItem) -> Item:
         location=row.location,
         instruction_required=bool(row.instruction_required),
         serial_number=row.serial_number,
+        holder_id=row.holder_id,
     )
 
 
@@ -137,6 +164,11 @@ def save_item(ctx, data: SaveIn) -> Item:
 
     fields = data.model_dump(exclude={"item_id", "actor_id"}, exclude_unset=True)
     actor_id = _actor_id(ctx, data.actor_id)
+    if fields.get("holder_id") is not None:
+        from hubra.core.models.member import Member
+
+        if db.session.get(Member, fields["holder_id"]) is None:
+            raise Refused(f"Member {fields['holder_id']} not found", code="NOT_FOUND", status=404)
     if data.item_id is None:
         if not fields.get("name") or not fields.get("category"):
             raise Refused("A new item needs a name and a category", code="VALIDATION_ERROR", status=400)
@@ -153,6 +185,29 @@ def save_item(ctx, data: SaveIn) -> Item:
     InventoryService.update(row, fields, actor_id)
     db.session.flush()
     return _item(row)
+
+
+def add_history(ctx, data: HistoryIn) -> HistoryRef:
+    """Record what an add-on did with an item."""
+    from hubra.core.models.member import Member
+
+    if db.session.get(InventoryItem, data.item_id) is None:
+        raise Refused(f"Inventory item {data.item_id} not found", code="NOT_FOUND", status=404)
+    for mid in (data.member_id, data.by_id):
+        if mid is not None and db.session.get(Member, mid) is None:
+            raise Refused(f"Member {mid} not found", code="NOT_FOUND", status=404)
+    entry = InventoryHistoryEntry(
+        item_id=data.item_id,
+        action=data.action,
+        member_id=data.member_id,
+        by_id=_actor_id(ctx, data.by_id),
+        note=data.note,
+    )
+    if data.at is not None:
+        entry.at = data.at
+    db.session.add(entry)
+    db.session.flush()
+    return HistoryRef(id=entry.id)
 
 
 def delete_item(ctx, data: DeleteIn) -> Deleted:

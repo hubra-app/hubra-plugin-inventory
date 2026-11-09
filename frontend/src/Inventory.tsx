@@ -1,6 +1,7 @@
 import { colorText } from '@hubra/plugin-sdk'
-import { useState } from 'react'
-import { Button, TextInput, Select, Badge, Paper, Text } from '@mantine/core'
+import { useState, type ReactNode } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Button, TextInput, Select, Badge, Paper, Text, Group } from '@mantine/core'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@hubra/plugin-sdk'
 import { IconPlus, IconSearch } from '@tabler/icons-react'
@@ -29,6 +30,7 @@ import {
 } from './api'
 import { QK } from './api'
 import {
+  CATEGORIES,
   categoryLabel,
   useCategories,
   CATEGORY_COLORS,
@@ -58,12 +60,21 @@ export function InventoryScreen() {
     queryFn: () => listInventory(),
   })
   const categories = useCategories(items)
-  const [catFilter, setCatFilter] = useState<InventoryCategory | 'All'>('All')
+  // ?type=Key opens the list on one type (the Keys add-on links here).
+  const [params] = useSearchParams()
+  const [catFilter, setCatFilter] = useState<InventoryCategory | 'All'>(() => {
+    const type = params.get('type') as InventoryCategory | null
+    return type && CATEGORIES.includes(type) ? type : 'All'
+  })
   const [statusFilter, setStatusFilter] = useState<InventoryStatus | 'All'>(
     'All',
   )
   const [search, setSearch] = useState('')
-  const [view, setView] = useState<'table' | 'cards'>('cards')
+  // "types": one section per type, like a shelf per kind of thing.
+  const [view, setView] = useState<'table' | 'cards' | 'types'>(() =>
+    params.get('type') === 'Key' ? 'table' : 'cards',
+  )
+  const keysOnly = catFilter === 'Key'
 
   const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null)
   const { go } = useNav()
@@ -82,6 +93,17 @@ export function InventoryScreen() {
   })
 
   const pg = usePagination(filtered, 12)
+  // Who has it, for items an add-on hands out (keys); always in the key view.
+  const showHolder = keysOnly || filtered.some((i) => i.holderName)
+  const viewOptions = [
+    { value: 'table', label: '\u2261 ' + t('members.tableView') },
+    { value: 'cards', label: '\u229e ' + t('members.cardsView') },
+    { value: 'types', label: '\u2637 ' + t('inventory.byType', 'Nach Typ') },
+  ]
+  // The "types" view shows every match, one section per type.
+  const groups = categories
+    .map((c) => ({ type: c, items: filtered.filter((i) => i.category === c) }))
+    .filter((g) => g.items.length > 0)
 
   const saveItem = async (target: InventoryItem | null, input: InventoryItemCreate) => {
     try {
@@ -134,6 +156,92 @@ export function InventoryScreen() {
   }
 
   const currentUserId = currentUser ? Number(currentUser.id) : null
+
+  const renderCard = (item: InventoryItem): ReactNode => {
+    const sc = STATUS_CONFIG[item.status]
+    const cc = CATEGORY_COLORS[item.category]
+    return (
+      <CardItem
+        key={item.id}
+        colorBar={cc}
+        icon={
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: `color-mix(in srgb, ${cc} 13%, transparent)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: colorText(cc),
+            }}
+          >
+            {CATEGORY_ICONS[item.category]}
+          </div>
+        }
+        title={item.name}
+        subtitle={
+          item.category === 'Key'
+            ? item.holderName
+              ? t('inventory.heldBy', 'Bei {{name}}', { name: item.holderName })
+              : item.serialNumber || t('inventory.notHandedOut', 'Nicht ausgegeben')
+            : (item.ownerName ?? t('inventory.noOwner', 'Keine Eigentümer:in'))
+        }
+        onClick={() => openItem(item)}
+        footer={
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Badge
+              variant="light"
+              size="sm"
+              style={{
+                borderColor: `color-mix(in srgb, ${sc.color} 27%, transparent)`,
+                color: sc.color,
+                background: `color-mix(in srgb, ${sc.color} 7%, transparent)`,
+              }}
+            >
+              {t(`inventory.status_${item.status}`, sc.label)}
+            </Badge>
+            <div onClick={(e) => e.stopPropagation()}>
+              <ActionButtons
+                onEdit={
+                  accessTo(item).canEdit
+                    ? () => setFormTarget(item)
+                    : undefined
+                }
+                onDelete={
+                  accessTo(item).canDelete
+                    ? () => setDeleteTarget(item)
+                    : undefined
+                }
+              />
+            </div>
+          </div>
+        }
+      >
+        {item.description && (
+          <Text
+            size="sm"
+            c="dimmed"
+            style={{
+              marginBottom: 8,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {item.description}
+          </Text>
+        )}
+      </CardItem>
+    )
+  }
 
   return (
     <div>
@@ -190,24 +298,40 @@ export function InventoryScreen() {
                 </div>
               ),
             },
-            {
-              key: 'category',
-              header: t('inventory.category', 'Kategorie'),
-              width: 120,
-              render: (item) => (
-                <Badge
-                  variant="light"
-                  style={{
-                    fontSize: 'var(--mantine-font-size-xs)',
-                    borderColor: `color-mix(in srgb, ${CATEGORY_COLORS[item.category]} 27%, transparent)`,
-                    color: colorText(CATEGORY_COLORS[item.category]),
-                    background: `color-mix(in srgb, ${CATEGORY_COLORS[item.category]} 7%, transparent)`,
-                  }}
-                >
-                  {categoryLabel(t, item.category)}
-                </Badge>
-              ),
-            },
+            ...(keysOnly
+              ? [
+                  {
+                    key: 'number',
+                    header: t('inventory.number', 'Nummer'),
+                    width: 110,
+                    render: (item: InventoryItem) => (
+                      <span className="num">{item.serialNumber || '—'}</span>
+                    ),
+                  },
+                ]
+              : []),
+            ...(keysOnly
+              ? []
+              : [
+                {
+                  key: 'category',
+                  header: t('inventory.category', 'Kategorie'),
+                  width: 120,
+                  render: (item: InventoryItem) => (
+                    <Badge
+                      variant="light"
+                      style={{
+                        fontSize: 'var(--mantine-font-size-xs)',
+                        borderColor: `color-mix(in srgb, ${CATEGORY_COLORS[item.category]} 27%, transparent)`,
+                        color: colorText(CATEGORY_COLORS[item.category]),
+                        background: `color-mix(in srgb, ${CATEGORY_COLORS[item.category]} 7%, transparent)`,
+                      }}
+                    >
+                      {categoryLabel(t, item.category)}
+                    </Badge>
+                  ),
+                },
+                ]),
             {
               key: 'status',
               header: t('common.status', 'Status'),
@@ -233,20 +357,42 @@ export function InventoryScreen() {
                 )
               },
             },
-            {
-              key: 'owner',
-              header: t('inventory.owner', 'Eigentümer:in'),
-              render: (item) => (
-                <span
-                  style={{
-                    color: item.ownerName ? 'var(--hb-text)' : 'var(--hb-text-3)',
-                    fontSize: 'var(--mantine-font-size-sm)',
-                  }}
-                >
-                  {item.ownerName ?? t('inventory.noOwner', 'Keine Eigentümer:in')}
-                </span>
-              ),
-            },
+            ...(showHolder
+              ? [
+                  {
+                    key: 'holder',
+                    header: t('inventory.holder', 'Bei'),
+                    render: (item: InventoryItem) => (
+                      <span
+                        style={{
+                          color: item.holderName ? 'var(--hb-text)' : 'var(--hb-text-3)',
+                          fontSize: 'var(--mantine-font-size-sm)',
+                        }}
+                      >
+                        {item.holderName ?? '—'}
+                      </span>
+                    ),
+                  },
+                ]
+              : []),
+            ...(keysOnly
+              ? []
+              : [
+                {
+                  key: 'owner',
+                  header: t('inventory.owner', 'Eigentümer:in'),
+                  render: (item: InventoryItem) => (
+                    <span
+                      style={{
+                        color: item.ownerName ? 'var(--hb-text)' : 'var(--hb-text-3)',
+                        fontSize: 'var(--mantine-font-size-sm)',
+                      }}
+                    >
+                      {item.ownerName ?? t('inventory.noOwner', 'Keine Eigentümer:in')}
+                    </span>
+                  ),
+                },
+                ]),
             {
               key: 'actions',
               header: '',
@@ -312,14 +458,7 @@ export function InventoryScreen() {
                 }
                 style={{ width: 140 }}
               />
-              <Seg
-                options={[
-                  { value: 'table', label: '\u2261 ' + t('members.tableView') },
-                  { value: 'cards', label: '\u229e ' + t('members.cardsView') },
-                ]}
-                value={view}
-                onChange={(v) => setView(v as 'table' | 'cards')}
-              />
+              <Seg options={viewOptions} value={view} onChange={(v) => setView(v as typeof view)} />
             </>
           }
           page={pg.page}
@@ -391,108 +530,35 @@ export function InventoryScreen() {
                 }
                 style={{ width: 140 }}
               />
-              <Seg
-                options={[
-                  { value: 'table', label: '\u2261 ' + t('members.tableView') },
-                  { value: 'cards', label: '\u229e ' + t('members.cardsView') },
-                ]}
-                value={view}
-                onChange={(v) => setView(v as 'table' | 'cards')}
-              />
+              <Seg options={viewOptions} value={view} onChange={(v) => setView(v as typeof view)} />
             </div>
           </div>
           {loading ? (
             <LoadingSpinner compact message={t('common.loading', 'Wird geladen …')} />
-          ) : pg.paged.length === 0 ? (
+          ) : (view === 'types' ? filtered.length : pg.paged.length) === 0 ? (
             <EmptyState
               title={t('inventory.noItemsFound', 'Keine Gegenstände gefunden')}
             />
+          ) : view === 'types' ? (
+            groups.map((g) => (
+              <section key={g.type} style={{ padding: 16, borderTop: '1px solid var(--hb-border)' }}>
+                <Group gap={8} mb={12}>
+                  <span style={{ color: colorText(CATEGORY_COLORS[g.type]) }}>
+                    {CATEGORY_ICONS[g.type]}
+                  </span>
+                  <Text fw={700}>{categoryLabel(t, g.type)}</Text>
+                  <Text fz="sm" className="num" style={{ color: 'var(--hb-text-3)' }}>
+                    {g.items.length}
+                  </Text>
+                </Group>
+                <CardGrid>{g.items.map(renderCard)}</CardGrid>
+              </section>
+            ))
           ) : (
             <>
               <div style={{ padding: 16 }}>
                 <CardGrid>
-                  {pg.paged.map((item) => {
-                    const sc = STATUS_CONFIG[item.status]
-                    const cc = CATEGORY_COLORS[item.category]
-                    return (
-                      <CardItem
-                        key={item.id}
-                        colorBar={cc}
-                        icon={
-                          <div
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 8,
-                              background: `color-mix(in srgb, ${cc} 13%, transparent)`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: colorText(cc),
-                            }}
-                          >
-                            {CATEGORY_ICONS[item.category]}
-                          </div>
-                        }
-                        title={item.name}
-                        subtitle={
-                          item.ownerName ??
-                          t('inventory.noOwner', 'Keine Eigentümer:in')
-                        }
-                        onClick={() => openItem(item)}
-                        footer={
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <Badge
-                              variant="light"
-                              size="sm"
-                              style={{
-                                borderColor: `color-mix(in srgb, ${sc.color} 27%, transparent)`,
-                                color: sc.color,
-                                background: `color-mix(in srgb, ${sc.color} 7%, transparent)`,
-                              }}
-                            >
-                              {t(`inventory.status_${item.status}`, sc.label)}
-                            </Badge>
-                            <div onClick={(e) => e.stopPropagation()}>
-                              <ActionButtons
-                                onEdit={
-                                  accessTo(item).canEdit
-                                    ? () => setFormTarget(item)
-                                    : undefined
-                                }
-                                onDelete={
-                                  accessTo(item).canDelete
-                                    ? () => setDeleteTarget(item)
-                                    : undefined
-                                }
-                              />
-                            </div>
-                          </div>
-                        }
-                      >
-                        {item.description && (
-                          <Text
-                            size="sm"
-                            c="dimmed"
-                            style={{
-                              marginBottom: 8,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {item.description}
-                          </Text>
-                        )}
-                      </CardItem>
-                    )
-                  })}
+                  {pg.paged.map(renderCard)}
                 </CardGrid>
               </div>
               <Pagination

@@ -9,9 +9,19 @@
   and isn't checked out: Keys hands it out, and its status follows (handed
   out = in use, lost, retired). Checking a key out is refused
   (`KEY_HANDOVER`).
+- Every item page has a **history**: checkouts and returns, and what an
+  add-on recorded (for keys: handed out, taken back, lost, found, retired,
+  with who and a note). New table `inventory_item_history`.
+- **Held by**: who has an item an add-on handed out (for keys: the holder),
+  on the item page, in the list and on the cards. New column
+  `inventory_items.holder_id`.
+- List views: besides table and cards, **By type** shows one section per
+  type. With the type "Key" picked, the table shows number, status and who
+  holds each key. `/app/inventory?type=Key` opens the list on keys.
 - For add-ons that keep a type of item of their own: the actions
-  `inventory.items.save` (add an item, or change the fields given) and
-  `inventory.items.delete`, and the event `inventory.item.saved` when an
+  `inventory.items.save` (add an item, or change the fields given, incl.
+  `holder_id`), `inventory.items.delete` and `inventory.items.history.add`
+  (an entry in the item's history), and the event `inventory.item.saved` when an
   item is added or changed, in Inventory or through the action.
 - Other plugins read items through Hubra's contracts instead of this
   plugin's code or tables: the queries `inventory.items.get` (by id) and

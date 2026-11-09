@@ -22,6 +22,7 @@ from .services import (
     checkin_access,
     checkout_access,
     item_access,
+    item_history,
 )
 
 inventory_bp = Blueprint("inventory_bp", __name__)
@@ -69,6 +70,14 @@ def list_items():
 def get_item(item_id: int):
     item = InventoryService.get(item_id)
     return jsonify(_item_schema.dump(item)), 200
+
+
+@inventory_bp.get("/<int:item_id>/history")
+@permission_required("items", "read", "View inventory", allow=item_access("read"))
+def get_item_history(item_id: int):
+    """Checkouts and what add-ons recorded (Keys: handovers), newest first."""
+    InventoryService.get(item_id)
+    return jsonify(item_history(item_id)), 200
 
 
 # ── POST /inventory ───────────────────────────────────────────────────────────

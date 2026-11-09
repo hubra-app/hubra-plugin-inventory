@@ -35,6 +35,8 @@ class InventoryItemSchema(ma.SQLAlchemyAutoSchema):
     # Auto schemas leave foreign keys out; the club app needs these.
     owner_id = fields.Int(dump_only=True, allow_none=True)
     responsible_id = fields.Int(dump_only=True, allow_none=True)
+    holder_id = fields.Int(dump_only=True, allow_none=True)
+    holder_name = fields.Method("get_holder_name", dump_only=True)
     owner_name = fields.Method("get_owner_name", dump_only=True)
     responsible_name = fields.Method("get_responsible_name", dump_only=True)
     instructed_member_ids = fields.Method("get_instructed_ids", dump_only=True)
@@ -55,6 +57,9 @@ class InventoryItemSchema(ma.SQLAlchemyAutoSchema):
 
     def get_responsible_name(self, obj):
         return obj.responsible.name if obj.responsible else None
+
+    def get_holder_name(self, obj):
+        return obj.holder.name if obj.holder else None
 
     def get_instructed_ids(self, obj):
         return [m.id for m in (obj.instructed_members or [])]
