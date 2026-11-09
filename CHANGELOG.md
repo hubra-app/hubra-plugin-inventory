@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Lending to the club lives here now. An item that belongs to a member
+  (*Belongs to: A member (lent to the club)*) is something that member lends
+  to the club; the list says "Lent by Anna" and filters by *The club's own*
+  / *Lent by members*. Members who may only add their own items get a "Lend
+  something to the club" button, and their new item is theirs by default;
+  `/app/inventory?lend=1` opens that form directly.
+- New action `inventory.items.lend` (member, name, description): records a
+  member's own thing as lent to the club. A member may only lend their own
+  things; the system may record it for anyone. Community 1.2.0 uses it to
+  move its old "lends" entries here. Items from the queries carry `lent_by`.
 - Other plugins read items through Hubra's contracts instead of this
   plugin's code or tables: the queries `inventory.items.get` (by id) and
   `inventory.items.list` (by name, with a search), and the event

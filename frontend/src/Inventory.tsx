@@ -60,6 +60,8 @@ export function InventoryScreen() {
   const [statusFilter, setStatusFilter] = useState<InventoryStatus | 'All'>(
     'All',
   )
+  // Who it belongs to: the club, or a member who lends it to the club.
+  const [ownerFilter, setOwnerFilter] = useState<'all' | 'shared' | 'private'>('all')
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'table' | 'cards'>('cards')
 
@@ -69,11 +71,16 @@ export function InventoryScreen() {
 
   // Form state
   // 'new' opens the form for a new item, an item opens it for that item.
-  const [formTarget, setFormTarget] = useState<InventoryItem | 'new' | null>(null)
+  // ?lend=1 (linked from elsewhere, e.g. the Community plugin) opens the
+  // form for something the member lends to the club.
+  const [formTarget, setFormTarget] = useState<InventoryItem | 'new' | null>(() =>
+    canCreate && new URLSearchParams(window.location.search).get('lend') ? 'new' : null,
+  )
 
   const filtered = items.filter((item) => {
     if (catFilter !== 'All' && item.category !== catFilter) return false
     if (statusFilter !== 'All' && item.status !== statusFilter) return false
+    if (ownerFilter !== 'all' && item.visibility !== ownerFilter) return false
     if (search && !item.name.toLowerCase().includes(search.toLowerCase()))
       return false
     return true
@@ -133,6 +140,26 @@ export function InventoryScreen() {
 
   const currentUserId = currentUser ? Number(currentUser.id) : null
 
+  const ownerSelect = (
+    <Select
+      size="sm"
+      aria-label={t('inventory.visibility', 'Eigentum')}
+      data={[
+        { value: 'all', label: t('inventory.allOwners', 'Verein und ausgeliehen') },
+        { value: 'shared', label: t('inventory.clubOwned', 'Gehört dem Verein') },
+        { value: 'private', label: t('inventory.lentByMembers', 'Von Mitgliedern ausgeliehen') },
+      ]}
+      value={ownerFilter}
+      onChange={(v) => setOwnerFilter((v ?? 'all') as 'all' | 'shared' | 'private')}
+      style={{ width: 200 }}
+    />
+  )
+  // "Lent by Anna" for a member's own thing, otherwise the owner's name.
+  const ownerLabel = (item: InventoryItem) =>
+    item.visibility === 'private' && item.ownerName
+      ? t('inventory.lentBy', 'Ausgeliehen von {{name}}', { name: item.ownerName })
+      : (item.ownerName ?? t('inventory.noOwner', 'Keine Eigentümer:in'))
+
   return (
     <div>
       <PageHead
@@ -142,7 +169,9 @@ export function InventoryScreen() {
           canCreate && (
             <Button variant="filled" onClick={() => setFormTarget('new')}>
               <IconPlus size={16} />
-              {t('inventory.addItem', 'Gegenstand hinzufügen')}
+              {canCreateAny
+                ? t('inventory.addItem', 'Gegenstand hinzufügen')
+                : t('inventory.lendToClub', 'Dem Verein etwas ausleihen')}
             </Button>
           )
         }
@@ -245,7 +274,7 @@ export function InventoryScreen() {
                     fontSize: 'var(--mantine-font-size-sm)',
                   }}
                 >
-                  {item.ownerName ?? t('inventory.noOwner', 'Keine Eigentümer:in')}
+                  {ownerLabel(item)}
                 </span>
               ),
             },
@@ -318,6 +347,7 @@ export function InventoryScreen() {
                 }
                 style={{ width: 140 }}
               />
+              {ownerSelect}
               <Seg
                 options={[
                   { value: 'table', label: '\u2261 ' + t('members.tableView') },
@@ -401,6 +431,7 @@ export function InventoryScreen() {
                 }
                 style={{ width: 140 }}
               />
+              {ownerSelect}
               <Seg
                 options={[
                   { value: 'table', label: '\u2261 ' + t('members.tableView') },
@@ -445,10 +476,7 @@ export function InventoryScreen() {
                           </div>
                         }
                         title={item.name}
-                        subtitle={
-                          item.ownerName ??
-                          t('inventory.noOwner', 'Keine Eigentümer:in')
-                        }
+                        subtitle={ownerLabel(item)}
                         onClick={() => openItem(item)}
                         footer={
                           <div

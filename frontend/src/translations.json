@@ -68,7 +68,7 @@
       "noOwner": "No owner",
       "noResponsible": "No responsible person",
       "owner": "Owner",
-      "private": "A person",
+      "private": "A member (lent to the club)",
       "privateShort": "Private",
       "recordCleared": "Record removed.",
       "recorded": "Recorded",
@@ -103,7 +103,12 @@
         "overdue": "Overdue checkouts",
         "overdueHint": "How many items are past their due date",
         "count": "How many"
-      }
+      },
+      "allOwners": "Club's and lent",
+      "clubOwned": "The club's own",
+      "lentByMembers": "Lent by members",
+      "lentBy": "Lent by {{name}}",
+      "lendToClub": "Lend something to the club"
     },
     "shell": {
       "nav": {
@@ -183,7 +188,7 @@
       "noOwner": "Keine Eigentümer:in",
       "noResponsible": "Keine verantwortliche Person",
       "owner": "Eigentümer:in",
-      "private": "Privatperson",
+      "private": "Ein Mitglied (dem Verein ausgeliehen)",
       "privateShort": "Privat",
       "recordCleared": "Eintrag entfernt.",
       "recorded": "Erfasst",
@@ -218,7 +223,12 @@
         "overdue": "Überfällige Ausleihen",
         "overdueHint": "Wie viele Gegenstände über die Rückgabe hinaus sind",
         "count": "Anzahl"
-      }
+      },
+      "allOwners": "Vereinseigen und ausgeliehen",
+      "clubOwned": "Gehört dem Verein",
+      "lentByMembers": "Von Mitgliedern ausgeliehen",
+      "lentBy": "Ausgeliehen von {{name}}",
+      "lendToClub": "Dem Verein etwas ausleihen"
     },
     "shell": {
       "nav": {

@@ -12,7 +12,9 @@ from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
+from hubra.core.contracts import Refused
 from hubra.core.extensions import db
+from hubra.core.models.member import Member
 
 from .models import InventoryCheckout, InventoryItem
 
@@ -37,6 +39,17 @@ class Item(BaseModel):
     status: str
     location: str | None = None
     instruction_required: bool = False
+    # The member whose own thing this is when a member lends it to the club.
+    lent_by: int | None = None
+
+
+class LendIn(BaseModel):
+    """A member's own thing they lend to the club (a trailer, a projector)."""
+
+    member_id: int
+    name: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=5000)
+    category: str = "Item"
 
 
 class ItemDeleted(BaseModel):
@@ -51,6 +64,7 @@ def _item(row: InventoryItem) -> Item:
         status=row.status,
         location=row.location,
         instruction_required=bool(row.instruction_required),
+        lent_by=row.owner_id if row.visibility == "private" else None,
     )
 
 
@@ -75,6 +89,34 @@ def list_items(ctx, data: ListIn) -> list[Item]:
         query = query.where(InventoryItem.name.ilike(f"%{data.search.strip()}%"))
     rows = db.session.scalars(query.order_by(InventoryItem.name).limit(data.limit)).all()
     return [_item(r) for r in rows]
+
+
+def lend_item(ctx, data: LendIn) -> Item:
+    """Record a member's own thing as lent to the club: an item that
+    belongs to that member (``visibility="private"``, owner the member).
+
+    A member may only lend their own things; a job or plugin acting as
+    the system may record it for anyone (moving old entries over)."""
+    if not ctx.system and (ctx.actor is None or ctx.actor.id != data.member_id):
+        raise Refused("Members can only lend their own things.", "NOT_YOUR_ITEM", 403)
+    if data.category not in ("Tool", "Item", "Material"):
+        raise Refused("Category must be Tool, Item or Material.", "VALIDATION_ERROR", 400)
+    member = db.session.get(Member, data.member_id)
+    if member is None or member.archived_at is not None:
+        raise Refused("No such member.", "NOT_FOUND", 404)
+    from .services import InventoryServiceItems
+
+    row = InventoryServiceItems.create(
+        {
+            "name": data.name.strip(),
+            "category": data.category,
+            "description": (data.description or "").strip() or None,
+            "owner_id": member.id,
+            "visibility": "private",
+        },
+        None if ctx.system else ctx.actor.id,
+    )
+    return _item(row)
 
 
 # ── Dashboard widgets ───────────────────────────────────────────────────────

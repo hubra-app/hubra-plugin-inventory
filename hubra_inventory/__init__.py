@@ -8,6 +8,7 @@ plugins built on it (keys, guides) keep working.
 
 from hubra.core.contracts import (
     WidgetField,
+    action_contract,
     event_contract,
     query_contract,
     widget_contract,
@@ -80,6 +81,14 @@ module = Module(
             output=f"{_C}:Item",
             perm="inventory.items.read",
             description="Items by name, optionally matching a search",
+        ),
+        action_contract(
+            "inventory.items.lend",
+            f"{_C}:lend_item",
+            input=f"{_C}:LendIn",
+            output=f"{_C}:Item",
+            perm="inventory.items.create_own",
+            description="Record a member's own thing as lent to the club",
         ),
         event_contract(
             "inventory.item.deleted",
