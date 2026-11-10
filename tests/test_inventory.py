@@ -158,6 +158,15 @@ def test_update_item(client, db, auth_headers, seeded_db):
     assert data["description"] == "In workshop"
 
 
+def test_serial_number_set_and_cleared(client, db, auth_headers, seeded_db):
+    created = _create_item(client, auth_headers).get_json()
+    url = f"{BASE}/{created['id']}"
+    resp = client.patch(url, json={"serial_number": "SN-42"}, headers=auth_headers)
+    assert resp.get_json()["serial_number"] == "SN-42"
+    resp = client.patch(url, json={"serial_number": None}, headers=auth_headers)
+    assert resp.get_json()["serial_number"] is None
+
+
 def test_update_invalid_status(client, db, auth_headers, seeded_db):
     created = _create_item(client, auth_headers).get_json()
     resp = client.patch(

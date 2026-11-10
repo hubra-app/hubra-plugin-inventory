@@ -41,8 +41,9 @@ item_instructions = Table(
 # ── InventoryItem ─────────────────────────────────────────────────────────────
 
 # "Key": keys, cards and fobs; the Keys add-on hands them out and keeps
-# their handover log.
-_CATEGORIES = ("Tool", "Item", "Material", "Key")
+# their handover log. "Consumable": things that get used up and are counted
+# (drinks, snacks, chalk); the Kasse plugin's Strichliste products are these.
+_CATEGORIES = ("Tool", "Item", "Material", "Key", "Consumable")
 _STATUSES = (
     "available",
     "in_use",
@@ -62,7 +63,7 @@ class InventoryItem(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(db.String(255), nullable=False)
-    # "Tool" | "Item" | "Material" | "Key"
+    # "Tool" | "Item" | "Material" | "Key" | "Consumable"
     category: Mapped[str] = mapped_column(db.String(50), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -107,6 +108,11 @@ class InventoryItem(db.Model):
     )
     location: Mapped[str | None] = mapped_column(db.String(255), nullable=True)
     serial_number: Mapped[str | None] = mapped_column(db.String(255), nullable=True)
+    # Stock count; None = not counted. Low once it is at or below min_stock
+    # (inventory.stock.low, for reordering). unit: "Flaschen", "Stück".
+    stock: Mapped[int | None] = mapped_column(db.Integer, nullable=True)
+    min_stock: Mapped[int | None] = mapped_column(db.Integer, nullable=True)
+    unit: Mapped[str | None] = mapped_column(db.String(30), nullable=True)
     barcode_id: Mapped[str | None] = mapped_column(db.String(255), nullable=True)
     # [{"name": "Manual", "url": "https://...", "type": "pdf"}, ...]
     documents: Mapped[list | None] = mapped_column(

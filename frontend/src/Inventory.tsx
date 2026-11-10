@@ -77,6 +77,10 @@ export function InventoryScreen() {
     params.get('type') === 'Key' ? 'table' : 'cards',
   )
   const keysOnly = catFilter === 'Key'
+  // ?low=1: only counted items at or below their reorder level.
+  const [lowOnly, setLowOnly] = useState(() => params.get('low') === '1')
+  const anyLow = items.some((i) => i.lowStock)
+  const anyCounted = items.some((i) => i.stock !== null)
 
   const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null)
   const { go } = useNav()
@@ -94,6 +98,7 @@ export function InventoryScreen() {
     if (catFilter !== 'All' && item.category !== catFilter) return false
     if (statusFilter !== 'All' && item.status !== statusFilter) return false
     if (ownerFilter !== 'all' && item.visibility !== ownerFilter) return false
+    if (lowOnly && !item.lowStock) return false
     if (search && !item.name.toLowerCase().includes(search.toLowerCase()))
       return false
     return true
@@ -184,6 +189,20 @@ export function InventoryScreen() {
       ? t('inventory.lentBy', 'Ausgeliehen von {{name}}', { name: item.ownerName })
       : (item.ownerName ?? t('inventory.noOwner', 'Ohne Eigentümer/in'))
 
+  // "12 Flaschen", red when it's time to reorder.
+  const stockBadge = (item: InventoryItem): ReactNode =>
+    item.stock === null ? null : (
+      <Badge
+        variant="light"
+        size="sm"
+        color={item.lowStock ? 'red' : 'gray'}
+        title={item.lowStock ? t('inventory.stock.low', 'Knapp') : undefined}
+      >
+        {[item.stock, item.unit].filter((x) => x !== '').join(' ')}
+        {item.lowStock ? ` · ${t('inventory.stock.low', 'Knapp')}` : ''}
+      </Badge>
+    )
+
   const renderCard = (item: InventoryItem): ReactNode => {
     const sc = STATUS_CONFIG[item.status]
     const cc = CATEGORY_COLORS[item.category]
@@ -235,6 +254,7 @@ export function InventoryScreen() {
             >
               {t(`inventory.status_${item.status}`, sc.label)}
             </Badge>
+            {stockBadge(item)}
             <div onClick={(e) => e.stopPropagation()}>
               <ActionButtons
                 onEdit={
@@ -386,6 +406,16 @@ export function InventoryScreen() {
                 )
               },
             },
+            ...(anyCounted
+              ? [
+                  {
+                    key: 'stock',
+                    header: t('inventory.stock.label', 'Bestand'),
+                    width: 130,
+                    render: (item: InventoryItem) => stockBadge(item) ?? '—',
+                  },
+                ]
+              : []),
             ...(showHolder
               ? [
                   {
@@ -465,6 +495,16 @@ export function InventoryScreen() {
               active: catFilter === c,
               onClick: () => setCatFilter(c),
             })),
+            ...(anyLow || lowOnly
+              ? [
+                  {
+                    label: t('inventory.stock.lowFilter', 'Knapp'),
+                    value: 'low',
+                    active: lowOnly,
+                    onClick: () => setLowOnly((v) => !v),
+                  },
+                ]
+              : []),
           ]}
           toolbar={
             <>
@@ -539,6 +579,14 @@ export function InventoryScreen() {
                   {categoryLabel(t, c)}
                 </button>
               ))}
+              {(anyLow || lowOnly) && (
+                <button
+                  className={`chip${lowOnly ? ' on' : ''}`}
+                  onClick={() => setLowOnly((v) => !v)}
+                >
+                  {t('inventory.stock.lowFilter', 'Knapp')}
+                </button>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <Select

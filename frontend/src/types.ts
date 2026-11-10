@@ -1,4 +1,9 @@
-export type InventoryCategory = "Tool" | "Item" | "Material" | "Key";
+export type InventoryCategory =
+  | "Tool"
+  | "Item"
+  | "Material"
+  | "Key"
+  | "Consumable";
 export type InventoryStatus =
   | "available"
   | "in_use"
@@ -46,6 +51,12 @@ export interface InventoryItem {
   documents?: { name: string; url: string; type?: string }[];
   imageUrl?: string | null;
   notes?: string;
+  /** How many are in stock; null while the item isn't counted. */
+  stock: number | null;
+  /** Reorder level: at or below it the item shows as low. */
+  minStock: number | null;
+  unit: string;
+  lowStock: boolean;
 }
 
 /** One line of an item's history: a checkout, a return, or what an add-on

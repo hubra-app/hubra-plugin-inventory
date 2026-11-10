@@ -8,10 +8,11 @@ import {
   IconClock,
   IconArchive,
   IconKey,
+  IconBottle,
 } from '@tabler/icons-react'
 import type { InventoryCategory, InventoryStatus } from './types'
 
-export const CATEGORIES: InventoryCategory[] = ['Tool', 'Item', 'Material', 'Key']
+export const CATEGORIES: InventoryCategory[] = ['Tool', 'Item', 'Material', 'Consumable', 'Key']
 
 type T = (key: string, fallback: string) => string
 
@@ -23,6 +24,8 @@ export function categoryLabel(t: T, c: InventoryCategory): string {
       return t('inventory.itemLabel', 'Gegenstand')
     case 'Key':
       return t('inventory.key', 'Schlüssel')
+    case 'Consumable':
+      return t('inventory.consumable', 'Verbrauchsmaterial')
     default:
       return t('inventory.material', 'Material')
   }
@@ -50,6 +53,7 @@ export const CATEGORY_ICONS: Record<InventoryCategory, React.ReactNode> = {
   Item: <IconBox size={16} />,
   Material: <IconStack2 size={16} />,
   Key: <IconKey size={16} />,
+  Consumable: <IconBottle size={16} />,
 }
 
 export const CATEGORY_COLORS: Record<InventoryCategory, string> = {
@@ -57,6 +61,7 @@ export const CATEGORY_COLORS: Record<InventoryCategory, string> = {
   Item: categoryColors.green,
   Material: categoryColors.orange,
   Key: categoryColors.yellow,
+  Consumable: categoryColors.purple,
 }
 
 export const STATUS_CONFIG: Record<

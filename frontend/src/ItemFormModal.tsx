@@ -1,5 +1,13 @@
 import { useState } from 'react'
-import { Button, Checkbox, Select, SimpleGrid, TextInput, Textarea } from '@mantine/core'
+import {
+  Button,
+  Checkbox,
+  NumberInput,
+  Select,
+  SimpleGrid,
+  TextInput,
+  Textarea,
+} from '@mantine/core'
 import type { InventoryItemCreate } from './api'
 import { Modal, Field } from '@hubra/plugin-sdk'
 import { MemberPicker } from '@hubra/plugin-sdk'
@@ -58,10 +66,17 @@ export function ItemFormModal({
   )
   const [fStatus, setFStatus] = useState<InventoryStatus>(item?.status ?? 'available')
   const [fCost, setFCost] = useState(item?.cost ?? '')
+  const [fSerial, setFSerial] = useState(item?.serialNumber ?? '')
   const [fLinks, setFLinks] = useState<InventoryLink[]>(item?.links ?? [])
   const [fInstructionRequired, setFInstructionRequired] = useState(
     item?.instructionRequired ?? false,
   )
+  // Stock: always offered for consumables, on request for anything else.
+  const [fCounted, setFCounted] = useState(item ? item.stock !== null : false)
+  const [fStock, setFStock] = useState<number | string>(item?.stock ?? 0)
+  const [fMinStock, setFMinStock] = useState<number | string>(item?.minStock ?? '')
+  const [fUnit, setFUnit] = useState(item?.unit ?? '')
+  const counted = fCat === 'Consumable' || fCounted
   const [saving, setSaving] = useState(false)
 
   const submit = async () => {
@@ -78,8 +93,13 @@ export function ItemFormModal({
         visibility: fVisibility,
         status: fStatus,
         cost: fCost || null,
+        serialNumber: fSerial.trim() || null,
         links: fLinks,
         instructionRequired: fCat === 'Key' ? false : fInstructionRequired,
+        // Counting stopped on an edit clears the count; a new item just has none.
+        stock: counted ? Number(fStock) || 0 : item ? null : undefined,
+        minStock: counted && fMinStock !== '' ? Number(fMinStock) : item ? null : undefined,
+        unit: counted ? fUnit.trim() || null : item ? null : undefined,
       })
     } finally {
       setSaving(false)
@@ -193,6 +213,48 @@ export function ItemFormModal({
             />
           </Field>
         </SimpleGrid>
+        <Field
+          label={
+            fCat === 'Key'
+              ? t('inventory.keyNumberOptional', 'Schlüsselnummer (optional)')
+              : t('inventory.serialOptional', 'Seriennummer (optional)')
+          }
+        >
+          <TextInput
+            value={fSerial}
+            onChange={(e) => setFSerial(e.currentTarget.value)}
+            maxLength={100}
+            placeholder={fCat === 'Key' ? 'A-12' : 'SN-123456'}
+          />
+        </Field>
+        {fCat !== 'Consumable' && fCat !== 'Key' && (
+          <Checkbox
+            checked={fCounted}
+            onChange={(e) => setFCounted(e.currentTarget.checked)}
+            label={t('inventory.stock.count', 'Bestand zählen')}
+          />
+        )}
+        {counted && (
+          <SimpleGrid cols={{ base: 1, xs: 3 }} spacing={12}>
+            <Field label={t('inventory.stock.label', 'Bestand')}>
+              <NumberInput value={fStock} onChange={setFStock} min={0} max={999999} allowDecimal={false} />
+            </Field>
+            <Field
+              label={t('inventory.stock.min', 'Nachbestellen ab')}
+              hint={t('inventory.stock.minHint', 'Bei diesem Bestand oder weniger gilt es als knapp.')}
+            >
+              <NumberInput value={fMinStock} onChange={setFMinStock} min={0} max={999999} allowDecimal={false} />
+            </Field>
+            <Field label={t('inventory.stock.unit', 'Einheit')}>
+              <TextInput
+                value={fUnit}
+                onChange={(e) => setFUnit(e.currentTarget.value)}
+                maxLength={30}
+                placeholder={t('inventory.stock.unitPlaceholder', 'Flaschen')}
+              />
+            </Field>
+          </SimpleGrid>
+        )}
         <Field label={t('inventory.links', 'Links')}>
           <LinkEditor links={fLinks} onChange={setFLinks} />
         </Field>

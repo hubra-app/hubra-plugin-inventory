@@ -102,7 +102,9 @@
         "checkedOutHint": "Items out right now, the ones due back first",
         "overdue": "Overdue checkouts",
         "overdueHint": "How many items are past their due date",
-        "count": "How many"
+        "count": "How many",
+        "lowStock": "Low stock",
+        "lowStockHint": "Consumables that should be reordered."
       },
       "key": "Key",
       "history": {
@@ -114,7 +116,10 @@
         "return": "Taken back",
         "lost": "Lost",
         "found": "Found again",
-        "retire": "Retired"
+        "retire": "Retired",
+        "stock_taken": "Taken",
+        "stock_added": "Restocked",
+        "stock_counted": "Counted"
       },
       "holder": "Held by",
       "number": "Number",
@@ -125,7 +130,25 @@
       "clubOwned": "The club's own",
       "lentByMembers": "Lent by members",
       "lentBy": "Lent by {{name}}",
-      "lendToClub": "Lend something to the club"
+      "lendToClub": "Lend something to the club",
+      "serialOptional": "Serial number (optional)",
+      "keyNumberOptional": "Key number (optional)",
+      "consumable": "Consumable",
+      "stock": {
+        "label": "Stock",
+        "count": "Count stock",
+        "min": "Reorder at",
+        "minHint": "At this stock or less it shows as low.",
+        "unit": "Unit",
+        "unitPlaceholder": "bottles",
+        "low": "Low",
+        "lowFilter": "Low stock",
+        "amount": "Amount",
+        "restock": "Restock",
+        "take": "Take",
+        "restocked": "Restocked",
+        "taken": "Taken"
+      }
     },
     "shell": {
       "nav": {
@@ -239,7 +262,9 @@
         "checkedOutHint": "Was gerade ausgeliehen ist, zuerst was bald zurück muss",
         "overdue": "Überfällige Ausleihen",
         "overdueHint": "Wie viele Gegenstände über die Rückgabe hinaus sind",
-        "count": "Anzahl"
+        "count": "Anzahl",
+        "lowStock": "Knapper Bestand",
+        "lowStockHint": "Verbrauchsmaterial, das nachbestellt werden sollte."
       },
       "key": "Schlüssel",
       "history": {
@@ -251,7 +276,10 @@
         "return": "Zurückgenommen",
         "lost": "Verloren",
         "found": "Wieder gefunden",
-        "retire": "Ausgemustert"
+        "retire": "Ausgemustert",
+        "stock_taken": "Entnommen",
+        "stock_added": "Aufgefüllt",
+        "stock_counted": "Gezählt"
       },
       "holder": "Bei",
       "number": "Nummer",
@@ -262,7 +290,25 @@
       "clubOwned": "Gehört dem Verein",
       "lentByMembers": "Von Mitgliedern ausgeliehen",
       "lentBy": "Ausgeliehen von {{name}}",
-      "lendToClub": "Dem Verein etwas ausleihen"
+      "lendToClub": "Dem Verein etwas ausleihen",
+      "serialOptional": "Seriennummer (optional)",
+      "keyNumberOptional": "Schlüsselnummer (optional)",
+      "consumable": "Verbrauchsmaterial",
+      "stock": {
+        "label": "Bestand",
+        "count": "Bestand zählen",
+        "min": "Nachbestellen ab",
+        "minHint": "Bei diesem Bestand oder weniger gilt es als knapp.",
+        "unit": "Einheit",
+        "unitPlaceholder": "Flaschen",
+        "low": "Knapp",
+        "lowFilter": "Knapp",
+        "amount": "Anzahl",
+        "restock": "Auffüllen",
+        "take": "Entnehmen",
+        "restocked": "Aufgefüllt",
+        "taken": "Entnommen"
+      }
     },
     "shell": {
       "nav": {

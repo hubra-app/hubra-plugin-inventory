@@ -39,6 +39,10 @@ interface BackendInventoryItem {
   documents: { name: string; url: string; type?: string }[] | null;
   image_url: string | null;
   notes: string | null;
+  stock?: number | null;
+  min_stock?: number | null;
+  unit?: string | null;
+  low_stock?: boolean;
 }
 
 function adapt(b: BackendInventoryItem): InventoryItem {
@@ -71,6 +75,10 @@ function adapt(b: BackendInventoryItem): InventoryItem {
     documents: b.documents ?? [],
     imageUrl: b.image_url ?? null,
     notes: b.notes ?? "",
+    stock: b.stock ?? null,
+    minStock: b.min_stock ?? null,
+    unit: b.unit ?? "",
+    lowStock: b.low_stock ?? false,
   };
 }
 
@@ -103,6 +111,12 @@ export interface InventoryItemCreate {
   cost?: string | null;
   links?: InventoryLink[];
   instructionRequired?: boolean;
+  /** Serial number; for a key its engraved number. "" clears it. */
+  serialNumber?: string | null;
+  /** null stops counting. */
+  stock?: number | null;
+  minStock?: number | null;
+  unit?: string | null;
 }
 
 export async function createInventoryItem(
@@ -122,6 +136,11 @@ export async function createInventoryItem(
   if (input.links !== undefined) body.links = input.links;
   if (input.instructionRequired !== undefined)
     body.instruction_required = input.instructionRequired;
+  if (input.serialNumber !== undefined)
+    body.serial_number = input.serialNumber || null;
+  if (input.stock !== undefined) body.stock = input.stock;
+  if (input.minStock !== undefined) body.min_stock = input.minStock;
+  if (input.unit !== undefined) body.unit = input.unit || null;
 
   const b = await apiFetch<BackendInventoryItem>("/inventory/", {
     method: "POST",
@@ -148,10 +167,27 @@ export async function updateInventoryItem(
   if (input.links !== undefined) body.links = input.links;
   if (input.instructionRequired !== undefined)
     body.instruction_required = input.instructionRequired;
+  if ("serialNumber" in input) body.serial_number = input.serialNumber || null;
+  if ("stock" in input) body.stock = input.stock;
+  if ("minStock" in input) body.min_stock = input.minStock;
+  if ("unit" in input) body.unit = input.unit || null;
 
   const b = await apiFetch<BackendInventoryItem>(`/inventory/${id}`, {
     method: "PATCH",
     body: JSON.stringify(body),
+  });
+  return adapt(b);
+}
+
+/** Add some (restocked, delta > 0) or take some of a counted item. */
+export async function adjustStock(
+  id: string,
+  delta: number,
+  reason?: string,
+): Promise<InventoryItem> {
+  const b = await apiFetch<BackendInventoryItem>(`/inventory/${id}/stock`, {
+    method: "POST",
+    body: JSON.stringify({ delta, reason: reason || null }),
   });
   return adapt(b);
 }

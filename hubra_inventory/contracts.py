@@ -21,6 +21,7 @@ from hubra.core.contracts import Refused
 from hubra.core.extensions import db
 from hubra.core.models.member import Member
 
+from .stock import adjust_stock, is_low
 from .models import (
     _CATEGORIES,
     _STATUSES,
@@ -54,6 +55,11 @@ class Item(BaseModel):
     holder_id: int | None = None
     # The member whose own thing this is when a member lends it to the club.
     lent_by: int | None = None
+    # Stock count of a consumable; None = not counted.
+    stock: int | None = None
+    min_stock: int | None = None
+    unit: str | None = None
+    low_stock: bool = False
 
 
 class LendIn(BaseModel):
@@ -94,9 +100,35 @@ class SaveIn(BaseModel):
     location: str | None = Field(default=None, max_length=255)
     serial_number: str | None = Field(default=None, max_length=255)
     notes: str | None = None
+    # A count by hand; null stops counting. Use inventory.stock.adjust to
+    # take some or add some.
+    stock: int | None = Field(default=None, ge=-99999, le=999999)
+    min_stock: int | None = Field(default=None, ge=0, le=999999)
+    unit: str | None = Field(default=None, max_length=30)
     # Who has it now (an add-on handing it out); null takes it back.
     holder_id: int | None = None
     actor_id: int | None = None
+
+
+class StockIn(BaseModel):
+    """Take some of a counted item (negative delta) or add some."""
+
+    item_id: int
+    delta: int = Field(ge=-9999, le=9999)
+    reason: str | None = Field(default=None, max_length=200)
+    # Who took it (a member on the Strichliste), for the history.
+    member_id: int | None = None
+    actor_id: int | None = None
+
+
+class StockLow(BaseModel):
+    """A counted item fell to its reorder level (``min_stock``) or below."""
+
+    item_id: int
+    name: str
+    stock: int
+    min_stock: int
+    unit: str | None = None
 
 
 class HistoryIn(BaseModel):
@@ -136,6 +168,10 @@ def _item(row: InventoryItem) -> Item:
         serial_number=row.serial_number,
         holder_id=row.holder_id,
         lent_by=row.owner_id if row.visibility == "private" else None,
+        stock=row.stock,
+        min_stock=row.min_stock,
+        unit=row.unit,
+        low_stock=is_low(row),
     )
 
 
@@ -196,6 +232,21 @@ def save_item(ctx, data: SaveIn) -> Item:
     if any(k in fields and fields[k] is None for k in ("name", "category", "status")):
         raise Refused("name, category and status can't be empty", code="VALIDATION_ERROR", status=400)
     InventoryService.update(row, fields, actor_id)
+    db.session.flush()
+    return _item(row)
+
+
+def adjust(ctx, data: StockIn) -> Item:
+    """Take some of a counted item or add some; an item that isn't counted
+    stays as it is (the answer's ``stock`` is then null)."""
+    from hubra.core.models.member import Member
+
+    row = db.session.get(InventoryItem, data.item_id)
+    if row is None or row.deleted_at is not None:
+        raise Refused(f"Inventory item {data.item_id} not found", code="NOT_FOUND", status=404)
+    if data.member_id is not None and db.session.get(Member, data.member_id) is None:
+        raise Refused(f"Member {data.member_id} not found", code="NOT_FOUND", status=404)
+    adjust_stock(row, data.delta, _actor_id(ctx, data.actor_id), data.reason, data.member_id)
     db.session.flush()
     return _item(row)
 
@@ -305,3 +356,26 @@ def overdue(ctx, config: dict) -> dict:
         )
     )
     return {"value": n or 0, "sub": None, "path": "/app/inventory"}
+
+
+def low_stock(ctx, config: dict) -> dict:
+    """Counted items at or below their reorder level, the emptiest first."""
+    count = max(1, min(int(config.get("count") or 5), 20))
+    low = (
+        _live()
+        .where(InventoryItem.stock.is_not(None), InventoryItem.min_stock.is_not(None))
+        .where(InventoryItem.stock <= InventoryItem.min_stock)
+    )
+    total = db.session.scalar(select(func.count()).select_from(low.subquery()))
+    rows = db.session.scalars(
+        low.order_by(InventoryItem.stock - InventoryItem.min_stock, InventoryItem.name).limit(count)
+    ).all()
+    items = [
+        {
+            "label": r.name,
+            "sub": f"{r.stock} / {r.min_stock}" + (f" {r.unit}" if r.unit else ""),
+            "path": f"/app/inventory/{r.id}",
+        }
+        for r in rows
+    ]
+    return {"items": items, "total": total}

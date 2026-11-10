@@ -3,6 +3,9 @@
 ## Unreleased
 
 - German: "Eigentümer:in" reads "Eigentümer/in", like the other gender forms in Hubra.
+- **Serial number** in the item form (Seriennummer; Schlüsselnummer for a key, which stays in line with the key's number in Keys).
+- **Stock counts** for consumables (new type *Verbrauchsmaterial*, or *Bestand zählen* on any item): stock, reorder level and unit. The item page shows the stock with *Auffüllen* / *Entnehmen*; the list shows it and filters *Knapp*. Every change leaves a line in the history.
+- For other plugins: action `inventory.stock.adjust` (the Kasse plugin's Strichliste takes from stock with it), event `inventory.stock.low` (once when an item falls to its reorder level, for reordering later), and the dashboard widget *Knapper Bestand* (`inventory.low_stock`). Run `flask db upgrade` after updating.
 
 ## 2.4.0
 
