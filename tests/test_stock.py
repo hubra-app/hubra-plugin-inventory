@@ -88,3 +88,15 @@ def test_stock_route_needs_a_count(client, db, auth_headers, seeded_db):
     resp = client.post(f"{BASE}/{made.get_json()['id']}/stock", json={"delta": 1},
                        headers=auth_headers)
     assert resp.status_code == 409
+
+
+def test_a_consumable_is_made_through_the_api(client, db, auth_headers, seeded_db):
+    resp = client.post(
+        BASE,
+        json={"name": "Kreide", "category": "Consumable", "stock": 3, "min_stock": 5, "unit": "Pack"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 201, resp.get_json()
+    body = resp.get_json()
+    assert body["category"] == "Consumable"
+    assert body["stock"] == 3 and body["low_stock"] is True
