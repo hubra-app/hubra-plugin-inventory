@@ -103,6 +103,8 @@ export interface InventoryItemCreate {
   cost?: string | null;
   links?: InventoryLink[];
   instructionRequired?: boolean;
+  /** Serial number; for a key its engraved number. "" clears it. */
+  serialNumber?: string | null;
 }
 
 export async function createInventoryItem(
@@ -122,6 +124,8 @@ export async function createInventoryItem(
   if (input.links !== undefined) body.links = input.links;
   if (input.instructionRequired !== undefined)
     body.instruction_required = input.instructionRequired;
+  if (input.serialNumber !== undefined)
+    body.serial_number = input.serialNumber || null;
 
   const b = await apiFetch<BackendInventoryItem>("/inventory/", {
     method: "POST",
@@ -148,6 +152,7 @@ export async function updateInventoryItem(
   if (input.links !== undefined) body.links = input.links;
   if (input.instructionRequired !== undefined)
     body.instruction_required = input.instructionRequired;
+  if ("serialNumber" in input) body.serial_number = input.serialNumber || null;
 
   const b = await apiFetch<BackendInventoryItem>(`/inventory/${id}`, {
     method: "PATCH",

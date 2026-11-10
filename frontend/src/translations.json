@@ -125,7 +125,9 @@
       "clubOwned": "The club's own",
       "lentByMembers": "Lent by members",
       "lentBy": "Lent by {{name}}",
-      "lendToClub": "Lend something to the club"
+      "lendToClub": "Lend something to the club",
+      "serialOptional": "Serial number (optional)",
+      "keyNumberOptional": "Key number (optional)"
     },
     "shell": {
       "nav": {
@@ -262,7 +264,9 @@
       "clubOwned": "Gehört dem Verein",
       "lentByMembers": "Von Mitgliedern ausgeliehen",
       "lentBy": "Ausgeliehen von {{name}}",
-      "lendToClub": "Dem Verein etwas ausleihen"
+      "lendToClub": "Dem Verein etwas ausleihen",
+      "serialOptional": "Seriennummer (optional)",
+      "keyNumberOptional": "Schlüsselnummer (optional)"
     },
     "shell": {
       "nav": {

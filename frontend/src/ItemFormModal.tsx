@@ -58,6 +58,7 @@ export function ItemFormModal({
   )
   const [fStatus, setFStatus] = useState<InventoryStatus>(item?.status ?? 'available')
   const [fCost, setFCost] = useState(item?.cost ?? '')
+  const [fSerial, setFSerial] = useState(item?.serialNumber ?? '')
   const [fLinks, setFLinks] = useState<InventoryLink[]>(item?.links ?? [])
   const [fInstructionRequired, setFInstructionRequired] = useState(
     item?.instructionRequired ?? false,
@@ -78,6 +79,7 @@ export function ItemFormModal({
         visibility: fVisibility,
         status: fStatus,
         cost: fCost || null,
+        serialNumber: fSerial.trim() || null,
         links: fLinks,
         instructionRequired: fCat === 'Key' ? false : fInstructionRequired,
       })
@@ -193,6 +195,20 @@ export function ItemFormModal({
             />
           </Field>
         </SimpleGrid>
+        <Field
+          label={
+            fCat === 'Key'
+              ? t('inventory.keyNumberOptional', 'Schlüsselnummer (optional)')
+              : t('inventory.serialOptional', 'Seriennummer (optional)')
+          }
+        >
+          <TextInput
+            value={fSerial}
+            onChange={(e) => setFSerial(e.currentTarget.value)}
+            maxLength={100}
+            placeholder={fCat === 'Key' ? 'A-12' : 'SN-123456'}
+          />
+        </Field>
         <Field label={t('inventory.links', 'Links')}>
           <LinkEditor links={fLinks} onChange={setFLinks} />
         </Field>

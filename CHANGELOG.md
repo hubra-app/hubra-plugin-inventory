@@ -3,6 +3,7 @@
 ## Unreleased
 
 - German: "Eigentümer:in" reads "Eigentümer/in", like the other gender forms in Hubra.
+- **Serial number** in the item form (Seriennummer; Schlüsselnummer for a key, which stays in line with the key's number in Keys).
 
 ## 2.4.0
 
