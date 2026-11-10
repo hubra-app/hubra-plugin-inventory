@@ -182,7 +182,7 @@ export function InventoryScreen() {
   const ownerLabel = (item: InventoryItem) =>
     item.visibility === 'private' && item.ownerName
       ? t('inventory.lentBy', 'Ausgeliehen von {{name}}', { name: item.ownerName })
-      : (item.ownerName ?? t('inventory.noOwner', 'Keine Eigentümer:in'))
+      : (item.ownerName ?? t('inventory.noOwner', 'Ohne Eigentümer/in'))
 
   const renderCard = (item: InventoryItem): ReactNode => {
     const sc = STATUS_CONFIG[item.status]
@@ -409,7 +409,7 @@ export function InventoryScreen() {
               : [
                 {
                   key: 'owner',
-                  header: t('inventory.owner', 'Eigentümer:in'),
+                  header: t('inventory.owner', 'Eigentümer/in'),
                   render: (item: InventoryItem) => (
                     <span
                       style={{

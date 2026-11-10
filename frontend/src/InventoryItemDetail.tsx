@@ -247,7 +247,7 @@ export function InventoryItemDetailScreen() {
           )}
         </div>
         <div className="member-facts" data-testid="detail-facts">
-          <Fact label={t('inventory.owner', 'Eigentümer:in')}>{item.ownerName ?? '—'}</Fact>
+          <Fact label={t('inventory.owner', 'Eigentümer/in')}>{item.ownerName ?? '—'}</Fact>
           <Fact label={t('inventory.responsible', 'Verantwortlich')}>{item.responsibleName ?? '—'}</Fact>
           <Fact label={t('inventory.visibility', 'Eigentum')}>
             {item.visibility === 'private' ? t('inventory.private', 'Privatperson') : t('inventory.shared', 'Verein')}
@@ -270,7 +270,7 @@ export function InventoryItemDetailScreen() {
             )}
             <Row label={t('inventory.category', 'Kategorie')}>{typeLabel}</Row>
             <Row label={t('inventory.statusLabel', 'Status')}>{t(`inventory.status_${item.status}`, sc.label)}</Row>
-            <Row label={t('inventory.owner', 'Eigentümer:in')}>{item.ownerName ?? '—'}</Row>
+            <Row label={t('inventory.owner', 'Eigentümer/in')}>{item.ownerName ?? '—'}</Row>
             <Row label={t('inventory.responsible', 'Verantwortlich')}>{item.responsibleName ?? '—'}</Row>
             {(item.holderName || item.category === 'Key') && (
               <Row label={t('inventory.holder', 'Bei')}>{item.holderName ?? '—'}</Row>

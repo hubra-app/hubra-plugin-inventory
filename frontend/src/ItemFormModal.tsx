@@ -153,9 +153,9 @@ export function ItemFormModal({
           />
         </Field>
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={12}>
-          <Field label={t('inventory.owner', 'Eigentümer:in')}>
+          <Field label={t('inventory.owner', 'Eigentümer/in')}>
             <MemberPicker
-              noneLabel={t('inventory.noOwner', 'Keine Eigentümer:in')}
+              noneLabel={t('inventory.noOwner', 'Ohne Eigentümer/in')}
               value={fOwner}
               onChange={(v) => setFOwner(v ? Number(v) : undefined)}
               disabled={!canGiveAway}
