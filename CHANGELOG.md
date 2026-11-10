@@ -1,5 +1,9 @@
 # Inventory
 
+## Unreleased
+
+- German: "Eigentümer:in" reads "Eigentümer/in", like the other gender forms in Hubra.
+
 ## 2.4.0
 
 - Gives the standard roles access when a club first switches it on (`role_defaults`, docs/roles.md in hubra-app/hubra): Mitglied Ansehen, Vorstand Ansehen, Aktuar/in Bearbeiten. Roles without access don't see it; their own data from it stays on their profile. Needs Hubra 0.2.5 or later.
