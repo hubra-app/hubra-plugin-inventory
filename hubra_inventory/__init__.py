@@ -117,6 +117,20 @@ module = Module(
             perm="inventory.items.update",
             description="Add an item (no item_id) or change the fields given",
         ),
+        # Stock of consumables (Kasse: the Strichliste takes from it).
+        action_contract(
+            "inventory.stock.adjust",
+            f"{_C}:adjust",
+            input=f"{_C}:StockIn",
+            output=f"{_C}:Item",
+            perm="inventory.items.update",
+            description="Take some of a counted item (negative delta) or add some",
+        ),
+        event_contract(
+            "inventory.stock.low",
+            f"{_C}:StockLow",
+            description="A counted item fell to its reorder level or below",
+        ),
         action_contract(
             "inventory.items.history.add",
             f"{_C}:add_history",
@@ -138,6 +152,16 @@ module = Module(
             f"{_C}:checked_out",
             label="inventory.widget.checkedOut",
             description="inventory.widget.checkedOutHint",
+            size="m",
+            view="list",
+            perm="inventory.items.read",
+            fields=(WidgetField("count", "inventory.widget.count", "number", 5),),
+        ),
+        widget_contract(
+            "inventory.low_stock",
+            f"{_C}:low_stock",
+            label="inventory.widget.lowStock",
+            description="inventory.widget.lowStockHint",
             size="m",
             view="list",
             perm="inventory.items.read",

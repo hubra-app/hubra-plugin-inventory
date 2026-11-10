@@ -46,11 +46,20 @@ class InventoryItemSchema(ma.SQLAlchemyAutoSchema):
     purchase_date = fields.Date(allow_none=True, dump_default=None)
     location = fields.Str(allow_none=True, dump_default=None)
     serial_number = fields.Str(allow_none=True, dump_default=None)
+    stock = fields.Int(allow_none=True, dump_default=None)
+    min_stock = fields.Int(allow_none=True, dump_default=None)
+    unit = fields.Str(allow_none=True, dump_default=None)
+    low_stock = fields.Method("get_low_stock", dump_only=True)
     barcode_id = fields.Str(allow_none=True, dump_default=None)
     documents = fields.List(fields.Dict(), dump_default=list)
     image_url = fields.Str(allow_none=True, dump_default=None)
     notes = fields.Str(allow_none=True, dump_default=None)
     deleted_at = fields.DateTime(allow_none=True, dump_only=True, dump_default=None)
+
+    def get_low_stock(self, obj):
+        from .stock import is_low
+
+        return is_low(obj)
 
     def get_owner_name(self, obj):
         return obj.owner.name if obj.owner else None
@@ -89,6 +98,9 @@ class InventoryItemCreateSchema(ma.Schema):
     current_value = fields.Decimal(allow_none=True, load_default=None)
     location = fields.Str(allow_none=True, load_default=None)
     serial_number = fields.Str(allow_none=True, load_default=None)
+    stock = fields.Int(allow_none=True, load_default=None, validate=validate.Range(min=-99999, max=999999))
+    min_stock = fields.Int(allow_none=True, load_default=None, validate=validate.Range(min=0, max=999999))
+    unit = fields.Str(allow_none=True, load_default=None, validate=validate.Length(max=30))
     barcode_id = fields.Str(allow_none=True, load_default=None)
     documents = fields.List(fields.Dict(), load_default=list)
     image_url = fields.Str(allow_none=True, load_default=None)
@@ -116,6 +128,9 @@ class InventoryItemUpdateSchema(ma.Schema):
     current_value = fields.Decimal(allow_none=True)
     location = fields.Str(allow_none=True)
     serial_number = fields.Str(allow_none=True)
+    stock = fields.Int(allow_none=True, validate=validate.Range(min=-99999, max=999999))
+    min_stock = fields.Int(allow_none=True, validate=validate.Range(min=0, max=999999))
+    unit = fields.Str(allow_none=True, validate=validate.Length(max=30))
     barcode_id = fields.Str(allow_none=True)
     documents = fields.List(fields.Dict())
     image_url = fields.Str(allow_none=True)

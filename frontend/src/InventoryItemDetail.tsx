@@ -1,6 +1,17 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
-import { ActionIcon, Anchor, Badge, Button, Group, Paper, Stack, Text, Title } from '@mantine/core'
+import {
+  ActionIcon,
+  Anchor,
+  Badge,
+  Button,
+  Group,
+  NumberInput,
+  Paper,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   IconArrowLeft,
@@ -10,6 +21,7 @@ import {
   IconInfoCircle,
   IconLink,
   IconPackage,
+  IconStack2,
   IconPencil,
   IconTrash,
   IconUserCheck,
@@ -34,12 +46,14 @@ import {
   getItemHistory,
   addInstruction,
   addSelfInstruction,
+  adjustStock,
   deleteInventoryItem,
   listInventory,
   removeInstruction,
   updateInventoryItem,
   type InventoryItemCreate,
 } from './api'
+import type { InventoryItem } from './types'
 import { CATEGORY_COLORS, CATEGORY_ICONS, STATUS_CONFIG, categoryLabel } from './constants'
 import { ItemFormModal } from './ItemFormModal'
 import { useItemAccess } from './access'
@@ -252,6 +266,13 @@ export function InventoryItemDetailScreen() {
           <Fact label={t('inventory.visibility', 'Eigentum')}>
             {item.visibility === 'private' ? t('inventory.private', 'Privatperson') : t('inventory.shared', 'Verein')}
           </Fact>
+          {item.stock !== null && (
+            <Fact label={t('inventory.stock.label', 'Bestand')}>
+              <span className="num" style={item.lowStock ? { color: 'var(--mantine-color-red-text)' } : undefined}>
+                {[item.stock, item.unit].filter((x) => x !== '').join(' ')}
+              </span>
+            </Fact>
+          )}
           {item.cost && (
             <Fact label={t('inventory.cost', 'Kosten')}>
               <span className="num">CHF {item.cost}</span>
@@ -287,6 +308,7 @@ export function InventoryItemDetailScreen() {
               </Row>
             )}
           </Card>
+          {item.stock !== null && <StockCard item={item} canEdit={access.canEdit} />}
           <HistoryCard itemId={item.id} />
           {item.links.length > 0 && (
             <Card icon={<IconLink size={16} />} title={t('inventory.links', 'Links')}>
@@ -425,6 +447,67 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
       <div style={{ fontSize: 'var(--mantine-font-size-xs)', color: 'var(--hb-text-2)', marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 'var(--mantine-font-size-md)', fontWeight: 600, color: 'var(--hb-text)' }}>{children}</div>
     </div>
+  )
+}
+
+/** A counted item's stock: how many, when to reorder, restock or take some. */
+function StockCard({ item, canEdit }: { item: InventoryItem; canEdit: boolean }) {
+  const { t } = useT()
+  const { notify } = useToast()
+  const queryClient = useQueryClient()
+  const [amount, setAmount] = useState<number | string>(1)
+  const [busy, setBusy] = useState(false)
+  const change = async (sign: 1 | -1) => {
+    const n = Number(amount)
+    if (!Number.isInteger(n) || n <= 0) return
+    setBusy(true)
+    try {
+      await adjustStock(
+        item.id,
+        sign * n,
+        sign > 0 ? t('inventory.stock.restocked', 'Aufgefüllt') : t('inventory.stock.taken', 'Entnommen'),
+      )
+      await queryClient.invalidateQueries({ queryKey: QK })
+    } catch (e) {
+      notify('error', t('inventory.failed', 'Fehler'), e instanceof Error ? e.message : t('common.unknownError', 'Unbekannter Fehler'))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <Card icon={<IconStack2 size={16} />} title={t('inventory.stock.label', 'Bestand')}>
+      <Row label={t('inventory.stock.label', 'Bestand')} mono>
+        {[item.stock, item.unit].filter((x) => x !== '').join(' ')}
+        {item.lowStock && (
+          <Badge ml={8} size="sm" variant="light" color="red">
+            {t('inventory.stock.low', 'Knapp')}
+          </Badge>
+        )}
+      </Row>
+      <Row label={t('inventory.stock.min', 'Nachbestellen ab')} mono>
+        {item.minStock ?? '—'}
+      </Row>
+      {canEdit && (
+        <Group gap={8} px={16} py={12} wrap="wrap">
+          <NumberInput
+            aria-label={t('inventory.stock.amount', 'Anzahl')}
+            value={amount}
+            onChange={setAmount}
+            min={1}
+            max={9999}
+            allowDecimal={false}
+            w={100}
+            size="sm"
+          />
+          <Button size="sm" variant="light" loading={busy} onClick={() => change(1)}>
+            {t('inventory.stock.restock', 'Auffüllen')}
+          </Button>
+          <Button size="sm" variant="default" loading={busy} onClick={() => change(-1)}>
+            {t('inventory.stock.take', 'Entnehmen')}
+          </Button>
+        </Group>
+      )}
+    </Card>
   )
 }
 

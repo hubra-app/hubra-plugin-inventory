@@ -240,9 +240,16 @@ class InventoryService:
             "documents",
             "image_url",
             "notes",
+            "min_stock",
+            "unit",
         ):
             if field in data:
                 setattr(item, field, data[field])
+        if "stock" in data and data["stock"] != item.stock:
+            # A count by hand (stocktake) goes into the history too.
+            from .stock import set_stock
+
+            set_stock(item, data["stock"], actor_id)
 
         log_audit(
             actor_id=actor_id,
@@ -526,6 +533,9 @@ class InventoryServiceItems:
             current_value=data.get("current_value"),
             location=data.get("location"),
             serial_number=data.get("serial_number"),
+            stock=data.get("stock"),
+            min_stock=data.get("min_stock"),
+            unit=data.get("unit"),
             barcode_id=data.get("barcode_id"),
             documents=data.get("documents") or [],
             image_url=data.get("image_url"),

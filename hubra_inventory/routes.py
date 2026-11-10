@@ -138,6 +138,32 @@ def update_item(item_id: int):
     return jsonify(_item_schema.dump(item)), 200
 
 
+# ── POST /inventory/<id>/stock ────────────────────────────────────────────────
+
+
+@inventory_bp.post("/<int:item_id>/stock")
+@permission_required(
+    "items", "update", "Update inventory items", allow=item_access("update")
+)
+def adjust_item_stock(item_id: int):
+    """{delta, reason?}: add some (restocked) or take some of a counted item."""
+    from .stock import adjust_stock
+
+    item = InventoryService.get(item_id)
+    body = request.get_json(silent=True) or {}
+    delta = body.get("delta")
+    if isinstance(delta, bool) or not isinstance(delta, int) or not -9999 <= delta <= 9999 or delta == 0:
+        return api_error("VALIDATION_ERROR", "delta must be a whole number from -9999 to 9999, not 0", 400)
+    if item.stock is None:
+        return api_error("NOT_COUNTED", "This item has no stock count; set one first", 409)
+    reason = body.get("reason")
+    reason = str(reason).strip()[:200] if reason else None
+    adjust_stock(item, delta, get_current_member().id, reason)
+    db.session.commit()
+    item = InventoryService.get(item.id)
+    return jsonify(_item_schema.dump(item)), 200
+
+
 # ── DELETE /inventory/<id> ────────────────────────────────────────────────────
 
 
