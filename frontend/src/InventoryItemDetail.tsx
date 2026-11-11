@@ -352,7 +352,7 @@ export function InventoryItemDetailScreen() {
                 </Text>
               }
             >
-              {!isSelfInstructed && me !== null && (
+              {!isSelfInstructed && me !== null && item.selfInduction && (
                 <Button mb="md" leftSection={<IconUserCheck size={16} />} onClick={instructSelf} disabled={busy}>
                   {t('inventory.markMyselfInstructed', 'Mich als eingewiesen markieren')}
                 </Button>

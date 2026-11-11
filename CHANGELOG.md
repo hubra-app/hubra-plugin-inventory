@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Tighter member rights.** The rights members get at "view" (check out, check in, confirm induction) now cover only themselves: a member checks out to themselves and checks in what they borrowed. Lending to someone else or taking back someone else's loan is for the owner, the responsible person or whoever may edit inventory items. A person's own item is lent only by that person, the person looking after it, or an admin.
+- **Self-induction is off by default.** New setting *Members may confirm their own induction* (`self_induction`). While it is off, "Mark myself as inducted" is gone and the API refuses it, so an item that needs an induction can't be borrowed without one. Clubs that used self-induction switch it on in the module settings.
+- Field rights work on edits: a role with only some field rights (e.g. `inventory.items.update.location`) changes just those fields; before, it got 403.
 - Security: links, documents and the image address take only http, https, mailto or an app path; a `javascript:` or `data:` link is refused, and one saved before shows as text. Lists hold at most 50 entries, short fields 255 characters.
 - Security: two Strichliste takes at the same moment no longer lose one (the stock count is read under a row lock); check-in uses the same lock as checkout.
 - Security: the action `inventory.items.delete` keeps a person's own item like the delete button does, and `actor_id` / `by_id` in the actions count only when the caller acts as the system, so the audit log names who really acted.

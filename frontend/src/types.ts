@@ -50,6 +50,8 @@ export interface InventoryItem {
   barcodeId?: string;
   documents?: { name: string; url: string; type?: string }[];
   imageUrl?: string | null;
+  /** The club lets members confirm their own induction (item page only). */
+  selfInduction?: boolean;
   notes?: string;
   /** How many are in stock; null while the item isn't counted. */
   stock: number | null;

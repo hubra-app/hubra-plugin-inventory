@@ -177,6 +177,16 @@ class InventoryService:
         return item  # type: ignore[return-value]
 
     @staticmethod
+    def borrower(item_id: int) -> int | None:
+        """The member who has the item out right now, if anyone."""
+        return db.session.scalar(
+            select(InventoryCheckout.member_id).where(
+                InventoryCheckout.item_id == item_id,
+                InventoryCheckout.returned_at.is_(None),
+            )
+        )
+
+    @staticmethod
     def check_person_owned(item: InventoryItem, actor_id: int, data=None) -> None:
         """403 when someone other than its owner deletes a person's item
         (``data`` None) or changes whose it is."""
