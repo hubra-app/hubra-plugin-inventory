@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- List filters (category, status, ownership, low stock) all sit in the Filter panel, with readable chip names; the card view pages and filters like the table.
 - German: "Eigentümer:in" reads "Eigentümer/in", like the other gender forms in Hubra.
 - **Serial number** in the item form (Seriennummer; Schlüsselnummer for a key, which stays in line with the key's number in Keys).
 - **Stock counts** for consumables (new type *Verbrauchsmaterial*, or *Bestand zählen* on any item): stock, reorder level and unit. The item page shows the stock with *Auffüllen* / *Entnehmen*; the list shows it and filters *Knapp*. Every change leaves a line in the history.

@@ -1,7 +1,7 @@
 import { colorText } from '@hubra/plugin-sdk'
 import { useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Button, TextInput, Select, Badge, Paper, Text, Group } from '@mantine/core'
+import { Button, Chip, TextInput, Select, Badge, Paper, Text, Group } from '@mantine/core'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@hubra/plugin-sdk'
 import { IconPlus, IconSearch } from '@tabler/icons-react'
@@ -18,7 +18,6 @@ import {
   CardItem,
   LoadingSpinner,
   EmptyState,
-  Pagination,
 } from '@hubra/plugin-sdk'
 import type { InventoryItem, InventoryCategory, InventoryStatus } from './types'
 import {
@@ -180,7 +179,7 @@ export function InventoryScreen() {
       ]}
       value={ownerFilter}
       onChange={(v) => setOwnerFilter((v ?? 'all') as 'all' | 'shared' | 'private')}
-      style={{ width: 200 }}
+      style={{ width: 260 }}
     />
   )
   // "Lent by Anna" for a member's own thing, otherwise the owner's name.
@@ -319,8 +318,11 @@ export function InventoryScreen() {
           }
           onRetry={() => refetch()}
         />
-      ) : view === 'table' ? (
+      ) : view !== 'types' ? (
         <DataTable
+          // Cards and table share the search, the Filter panel and paging.
+          renderCard={view === 'cards' ? renderCard : undefined}
+          cardsOnly={view === 'cards'}
           breakpoint="wide"
           columns={[
             {
@@ -474,63 +476,67 @@ export function InventoryScreen() {
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder={t('inventory.searchItems', 'Gegenstände suchen …')}
-          filters={[
+          filterGroups={[
             {
-              label: t('inventory.allCategories', 'Alle Kategorien'),
-              value: 'cat-all',
-              active: catFilter === 'All',
-              onClick: () => setCatFilter('All'),
+              key: 'category',
+              label: t('inventory.category', 'Kategorie'),
+              value: catFilter,
+              defaultValue: 'All',
+              options: [
+                { value: 'All', label: t('inventory.allCategories', 'Alle Kategorien') },
+                ...categories.map((c) => ({
+                  value: c,
+                  text: categoryLabel(t, c),
+                  label: (
+                    <>
+                      <span className="dot" style={{ background: CATEGORY_COLORS[c] }} />
+                      {categoryLabel(t, c)}
+                    </>
+                  ),
+                })),
+              ],
+              onChange: (v) => setCatFilter(v as typeof catFilter),
             },
-            ...categories.map((c) => ({
-              label: (
-                <>
-                  <span
-                    className="dot"
-                    style={{ background: CATEGORY_COLORS[c] }}
-                  />
-                  {categoryLabel(t, c)}
-                </>
-              ),
-              value: `cat-${c}`,
-              active: catFilter === c,
-              onClick: () => setCatFilter(c),
-            })),
-            ...(anyLow || lowOnly
-              ? [
-                  {
-                    label: t('inventory.stock.lowFilter', 'Knapp'),
-                    value: 'low',
-                    active: lowOnly,
-                    onClick: () => setLowOnly((v) => !v),
-                  },
-                ]
-              : []),
+            {
+              key: 'status',
+              label: t('common.status', 'Status'),
+              value: statusFilter,
+              defaultValue: 'All',
+              options: [
+                { value: 'All', label: t('inventory.allStatuses', 'Alle Status') },
+                ...STATUSES.map((st) => ({
+                  value: st,
+                  label: t(`inventory.status_${st}`, STATUS_CONFIG[st].label),
+                })),
+              ],
+              onChange: (v) => setStatusFilter(v as InventoryStatus | 'All'),
+            },
+            {
+              key: 'owner',
+              label: t('inventory.visibility', 'Eigentum'),
+              value: ownerFilter,
+              defaultValue: 'all',
+              options: [
+                { value: 'all', label: t('inventory.allOwners', 'Verein und ausgeliehen') },
+                { value: 'shared', label: t('inventory.clubOwned', 'Gehört dem Verein') },
+                { value: 'private', label: t('inventory.lentByMembers', 'Von Mitgliedern ausgeliehen') },
+              ],
+              onChange: (v) => setOwnerFilter(v as 'all' | 'shared' | 'private'),
+            },
+            {
+              key: 'stock',
+              label: t('inventory.stock.label', 'Bestand'),
+              value: lowOnly ? 'low' : 'all',
+              defaultValue: 'all',
+              hidden: !(anyLow || lowOnly),
+              options: [
+                { value: 'all', label: t('common.all', 'Alle') },
+                { value: 'low', label: t('inventory.stock.lowFilter', 'Knapp') },
+              ],
+              onChange: (v) => setLowOnly(v === 'low'),
+            },
           ]}
-          toolbar={
-            <>
-              <Select
-                size="sm"
-                aria-label={t('common.status', 'Status')}
-                data={[
-                  {
-                    value: 'All',
-                    label: t('inventory.allStatuses', 'Alle Status'),
-                  },
-                  ...STATUSES.map((s) => ({
-                    value: s,
-                    label: t(`inventory.status_${s}`, STATUS_CONFIG[s].label),
-                  })),
-                ]}
-                value={statusFilter}
-                onChange={(v) =>
-                  setStatusFilter((v ?? 'All') as InventoryStatus | 'All')
-                }
-                style={{ width: 140 }}
-              />
-              {ownerSelect}
-              <Seg options={viewOptions} value={view} onChange={(v) => setView(v as typeof view)} />
-            </>
-          }
+          toolbar={<Seg options={viewOptions} value={view} onChange={(v) => setView(v as typeof view)} />}
           page={pg.page}
           perPage={pg.perPage}
           total={pg.total}
@@ -559,35 +565,11 @@ export function InventoryScreen() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button
-                className={`chip${catFilter === 'All' ? ' on' : ''}`}
-                onClick={() => setCatFilter('All')}
-              >
-                {t('inventory.allCategories', 'Alle Kategorien')}
-              </button>
-              {categories.map((c) => (
-                <button
-                  key={c}
-                  className={`chip${catFilter === c ? ' on' : ''}`}
-                  onClick={() => setCatFilter(c)}
-                >
-                  <span
-                    className="dot"
-                    style={{ background: CATEGORY_COLORS[c] }}
-                  />
-                  {categoryLabel(t, c)}
-                </button>
-              ))}
-              {(anyLow || lowOnly) && (
-                <button
-                  className={`chip${lowOnly ? ' on' : ''}`}
-                  onClick={() => setLowOnly((v) => !v)}
-                >
-                  {t('inventory.stock.lowFilter', 'Knapp')}
-                </button>
-              )}
-            </div>
+            {(anyLow || lowOnly) && (
+              <Chip checked={lowOnly} onChange={setLowOnly} variant="outline">
+                {t('inventory.stock.lowFilter', 'Knapp')}
+              </Chip>
+            )}
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <Select
                 size="sm"
@@ -614,11 +596,11 @@ export function InventoryScreen() {
           </div>
           {loading ? (
             <LoadingSpinner compact message={t('common.loading', 'Wird geladen …')} />
-          ) : (view === 'types' ? filtered.length : pg.paged.length) === 0 ? (
+          ) : filtered.length === 0 ? (
             <EmptyState
               title={t('inventory.noItemsFound', 'Keine Gegenstände gefunden')}
             />
-          ) : view === 'types' ? (
+          ) : (
             groups.map((g) => (
               <section key={g.type} style={{ padding: 16, borderTop: '1px solid var(--hb-border)' }}>
                 <Group gap={8} mb={12}>
@@ -633,22 +615,6 @@ export function InventoryScreen() {
                 <CardGrid>{g.items.map(renderCard)}</CardGrid>
               </section>
             ))
-          ) : (
-            <>
-              <div style={{ padding: 16 }}>
-                <CardGrid>
-                  {pg.paged.map(renderCard)}
-                </CardGrid>
-              </div>
-              <Pagination
-                page={pg.page}
-                perPage={pg.perPage}
-                total={pg.total}
-                totalPages={pg.totalPages}
-                goPage={pg.goPage}
-                setPerPage={pg.setPerPage}
-              />
-            </>
           )}
         </Paper>
       )}
