@@ -58,6 +58,14 @@ import { CATEGORY_COLORS, CATEGORY_ICONS, STATUS_CONFIG, categoryLabel } from '.
 import { ItemFormModal } from './ItemFormModal'
 import { useItemAccess } from './access'
 
+// Only web and mail links become a link target; anything else (javascript:,
+// data:) saved before the API checked it is shown as text, not run.
+function safeHref(url: string): string | undefined {
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(url.replace(/[\u0000-\u0020\u007f]/g, ''))
+  if (scheme && !['http', 'https', 'mailto'].includes(scheme[1].toLowerCase())) return undefined
+  return url
+}
+
 /* One item as its own page, like a member's page in Hubra: a back link, a
  * header card with the item, its badges, actions and key figures, then a
  * card of facts beside the inductions. It uses Hubra's detail page classes
@@ -316,7 +324,7 @@ export function InventoryItemDetailScreen() {
                 {item.links.map((link, i) => (
                   <Anchor
                     key={link.url + i}
-                    href={link.url}
+                    href={safeHref(link.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     fz="sm"
@@ -344,7 +352,7 @@ export function InventoryItemDetailScreen() {
                 </Text>
               }
             >
-              {!isSelfInstructed && me !== null && (
+              {!isSelfInstructed && me !== null && item.selfInduction && (
                 <Button mb="md" leftSection={<IconUserCheck size={16} />} onClick={instructSelf} disabled={busy}>
                   {t('inventory.markMyselfInstructed', 'Mich als eingewiesen markieren')}
                 </Button>

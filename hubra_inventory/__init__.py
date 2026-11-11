@@ -55,6 +55,13 @@ module = Module(
             label="Block checkouts while an invoice is overdue",
             description="More than 7 days past due; needs the Finance module",
         ),
+        SettingField(
+            "self_induction",
+            "bool",
+            default=False,
+            label="Members may confirm their own induction",
+            description="Off: only the owner, the responsible person or an inventory manager inducts members",
+        ),
     ),
     nav=(
         NavItem(

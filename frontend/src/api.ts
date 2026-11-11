@@ -39,6 +39,7 @@ interface BackendInventoryItem {
   documents: { name: string; url: string; type?: string }[] | null;
   image_url: string | null;
   notes: string | null;
+  self_induction?: boolean;
   stock?: number | null;
   min_stock?: number | null;
   unit?: string | null;
@@ -74,6 +75,7 @@ function adapt(b: BackendInventoryItem): InventoryItem {
     barcodeId: b.barcode_id ?? "",
     documents: b.documents ?? [],
     imageUrl: b.image_url ?? null,
+    selfInduction: b.self_induction ?? false,
     notes: b.notes ?? "",
     stock: b.stock ?? null,
     minStock: b.min_stock ?? null,

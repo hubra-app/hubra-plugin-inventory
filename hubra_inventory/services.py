@@ -177,6 +177,16 @@ class InventoryService:
         return item  # type: ignore[return-value]
 
     @staticmethod
+    def borrower(item_id: int) -> int | None:
+        """The member who has the item out right now, if anyone."""
+        return db.session.scalar(
+            select(InventoryCheckout.member_id).where(
+                InventoryCheckout.item_id == item_id,
+                InventoryCheckout.returned_at.is_(None),
+            )
+        )
+
+    @staticmethod
     def check_person_owned(item: InventoryItem, actor_id: int, data=None) -> None:
         """403 when someone other than its owner deletes a person's item
         (``data`` None) or changes whose it is."""
@@ -438,6 +448,9 @@ class InventoryService:
     ) -> InventoryCheckout:
         """Check in an item. Raises 409 if not checked out."""
         item = InventoryService.get(item_id)
+        # Same row lock as checkout: a check-in racing a checkout or a
+        # second check-in sees the status the other one left.
+        db.session.refresh(item, with_for_update=True)
 
         if item.status != "checked_out":
             raise_error(
