@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Security: links, documents and the image address take only http, https, mailto or an app path; a `javascript:` or `data:` link is refused, and one saved before shows as text. Lists hold at most 50 entries, short fields 255 characters.
+- Security: two Strichliste takes at the same moment no longer lose one (the stock count is read under a row lock); check-in uses the same lock as checkout.
+- Security: the action `inventory.items.delete` keeps a person's own item like the delete button does, and `actor_id` / `by_id` in the actions count only when the caller acts as the system, so the audit log names who really acted.
+- A new item can't start as "checked out" (it could never be checked in), and an unknown owner or responsible person is a 404 instead of a server error.
 - List filters (category, status, ownership, low stock) all sit in the Filter panel, with readable chip names; the card view pages and filters like the table.
 - German: "Eigentümer:in" reads "Eigentümer/in", like the other gender forms in Hubra.
 - **Serial number** in the item form (Seriennummer; Schlüsselnummer for a key, which stays in line with the key's number in Keys).

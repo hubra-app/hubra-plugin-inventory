@@ -202,7 +202,10 @@ def list_items(ctx, data: ListIn) -> list[Item]:
 
 
 def _actor_id(ctx, given: int | None) -> int | None:
-    if given is not None:
+    """Who the audit log and history name. A caller acting as the system
+    (an add-on that checked the rights itself) names the member; a caller
+    acting as a member is that member, whatever ``actor_id`` says."""
+    if ctx.system:
         return given
     return ctx.actor.id if ctx.actor is not None else None
 
@@ -276,11 +279,22 @@ def add_history(ctx, data: HistoryIn) -> HistoryRef:
 
 def delete_item(ctx, data: DeleteIn) -> Deleted:
     """Delete an item; an item that is already gone is fine."""
-    from .services import InventoryService
+    from .services import InventoryService, person_owner
 
-    if db.session.get(InventoryItem, data.item_id) is None:
+    row = db.session.get(InventoryItem, data.item_id)
+    if row is None:
         return Deleted(deleted=False)
-    InventoryService.delete(data.item_id, _actor_id(ctx, data.actor_id))
+    actor_id = _actor_id(ctx, data.actor_id)
+    # The same rule as DELETE /inventory/<id>: a person's item is removed
+    # by that person only, unless the system acts (an add-on's own check).
+    owner = person_owner(row)
+    if not ctx.system and owner is not None and owner != actor_id:
+        raise Refused(
+            "This item belongs to a person: only they can remove it",
+            "PERSON_OWNED",
+            403,
+        )
+    InventoryService.delete(data.item_id, actor_id)
     return Deleted(deleted=True)
 
 

@@ -58,6 +58,11 @@ def adjust_stock(
     isn't counted (``stock`` is None): nothing changes then."""
     if item.stock is None or delta == 0:
         return False
+    # Re-read the count under a row lock: two Strichliste takes at once
+    # both read 10 and wrote 9, and one was lost (Postgres; no-op on SQLite).
+    db.session.refresh(item, with_for_update=True)
+    if item.stock is None:
+        return False
     was_low = is_low(item)
     item.stock += delta
     note = f"{delta:+d}" + (f" · {reason}" if reason else "")

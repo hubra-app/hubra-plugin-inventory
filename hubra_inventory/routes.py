@@ -43,6 +43,18 @@ def _by_object() -> bool:
     return g.get("permission_scope") == "object"
 
 
+def _check_people(data: dict, item=None) -> None:
+    """404 for an owner or responsible person who isn't a current member
+    (a wrong id was a database error, 500). Unchanged values pass."""
+    for field in ("owner_id", "responsible_id"):
+        mid = data.get(field)
+        if mid is None or (item is not None and getattr(item, field) == mid):
+            continue
+        person = db.session.get(Member, mid)
+        if person is None or person.archived_at is not None:
+            raise_error(404, "NOT_FOUND", f"Member {mid} not found")
+
+
 def _may_create_own(member, **_):
     return "own" if member_has_permission(member, _CREATE_OWN) else None
 
@@ -94,6 +106,7 @@ def create_item():
     if _by_object():
         # With only "add own items", the item is always the member's own.
         data["owner_id"] = get_current_member().id
+    _check_people(data)
 
     item = InventoryServiceItems.create(data, get_current_member().id)
 
@@ -124,6 +137,7 @@ def update_item(item_id: int):
     if _by_object() and g.object_access != "owner":
         InventoryService.check_owner_fields(item, data)
     InventoryService.check_person_owned(item, get_current_member().id, data)
+    _check_people(data, item)
 
     InventoryService.update(item, data, get_current_member().id)
 
@@ -256,8 +270,10 @@ def checkout_item(item_id: int):
 def checkin_item(item_id: int):
     body = request.get_json(silent=True) or {}
     condition_notes = body.get("condition_notes")
-    if condition_notes is not None and not isinstance(condition_notes, str):
-        return api_error("VALIDATION_ERROR", "condition_notes must be text", 400)
+    if condition_notes is not None and (
+        not isinstance(condition_notes, str) or len(condition_notes) > 20000
+    ):
+        return api_error("VALIDATION_ERROR", "condition_notes must be text (20000 characters at most)", 400)
 
     checkout = InventoryService.checkin(
         item_id=item_id,

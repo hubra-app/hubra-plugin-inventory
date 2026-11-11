@@ -438,6 +438,9 @@ class InventoryService:
     ) -> InventoryCheckout:
         """Check in an item. Raises 409 if not checked out."""
         item = InventoryService.get(item_id)
+        # Same row lock as checkout: a check-in racing a checkout or a
+        # second check-in sees the status the other one left.
+        db.session.refresh(item, with_for_update=True)
 
         if item.status != "checked_out":
             raise_error(
