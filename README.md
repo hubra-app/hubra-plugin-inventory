@@ -1,5 +1,7 @@
 # Inventory
 
+[![Test and release](https://github.com/hubra-app/hubra-plugin-inventory/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/hubra-app/hubra-plugin-inventory/actions/workflows/release.yml?query=branch%3Amain) [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-bitsandbricks-ffdd00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/bitsandbricks)
+
 A [Hubra](https://hubra.club) plugin for a club's tools, machines and
 materials: who owns and looks after each item, where it is, what it cost,
 checkouts with due dates, and inductions for items that need one before
