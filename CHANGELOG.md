@@ -1,6 +1,6 @@
 # Inventory
 
-## Unreleased
+## 2.5.0
 
 - **Tighter member rights.** The rights members get at "view" (check out, check in, confirm induction) now cover only themselves: a member checks out to themselves and checks in what they borrowed. Lending to someone else or taking back someone else's loan is for the owner, the responsible person or whoever may edit inventory items. A person's own item is lent only by that person, the person looking after it, or an admin.
 - **Self-induction is off by default.** New setting *Members may confirm their own induction* (`self_induction`). While it is off, "Mark myself as inducted" is gone and the API refuses it, so an item that needs an induction can't be borrowed without one. Clubs that used self-induction switch it on in the module settings.
